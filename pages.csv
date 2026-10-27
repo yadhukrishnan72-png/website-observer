@@ -1,0 +1,101 @@
+company_name,page_type,url
+Acme AI,products,http://localhost:8000/acme-ai/products.html
+Acme AI,pricing,http://localhost:8000/acme-ai/pricing.html
+Acme AI,about,http://localhost:8000/acme-ai/about.html
+Acme AI,news,http://localhost:8000/acme-ai/news.html
+Acme AI,careers,http://localhost:8000/acme-ai/careers.html
+Northwind Analytics,products,http://localhost:8000/northwind-analytics/products.html
+Northwind Analytics,pricing,http://localhost:8000/northwind-analytics/pricing.html
+Northwind Analytics,about,http://localhost:8000/northwind-analytics/about.html
+Northwind Analytics,news,http://localhost:8000/northwind-analytics/news.html
+Northwind Analytics,careers,http://localhost:8000/northwind-analytics/careers.html
+Brightpath HR,products,http://localhost:8000/brightpath-hr/products.html
+Brightpath HR,pricing,http://localhost:8000/brightpath-hr/pricing.html
+Brightpath HR,about,http://localhost:8000/brightpath-hr/about.html
+Brightpath HR,news,http://localhost:8000/brightpath-hr/news.html
+Brightpath HR,careers,http://localhost:8000/brightpath-hr/careers.html
+Cloudloom,products,http://localhost:8000/cloudloom/products.html
+Cloudloom,pricing,http://localhost:8000/cloudloom/pricing.html
+Cloudloom,about,http://localhost:8000/cloudloom/about.html
+Cloudloom,news,http://localhost:8000/cloudloom/news.html
+Cloudloom,careers,http://localhost:8000/cloudloom/careers.html
+Datastream Labs,products,http://localhost:8000/datastream-labs/products.html
+Datastream Labs,pricing,http://localhost:8000/datastream-labs/pricing.html
+Datastream Labs,about,http://localhost:8000/datastream-labs/about.html
+Datastream Labs,news,http://localhost:8000/datastream-labs/news.html
+Datastream Labs,careers,http://localhost:8000/datastream-labs/careers.html
+Helix Support,products,http://localhost:8000/helix-support/products.html
+Helix Support,pricing,http://localhost:8000/helix-support/pricing.html
+Helix Support,about,http://localhost:8000/helix-support/about.html
+Helix Support,news,http://localhost:8000/helix-support/news.html
+Helix Support,careers,http://localhost:8000/helix-support/careers.html
+Orbit CRM,products,http://localhost:8000/orbit-crm/products.html
+Orbit CRM,pricing,http://localhost:8000/orbit-crm/pricing.html
+Orbit CRM,about,http://localhost:8000/orbit-crm/about.html
+Orbit CRM,news,http://localhost:8000/orbit-crm/news.html
+Orbit CRM,careers,http://localhost:8000/orbit-crm/careers.html
+Pinecrest Software,products,http://localhost:8000/pinecrest-software/products.html
+Pinecrest Software,pricing,http://localhost:8000/pinecrest-software/pricing.html
+Pinecrest Software,about,http://localhost:8000/pinecrest-software/about.html
+Pinecrest Software,news,http://localhost:8000/pinecrest-software/news.html
+Pinecrest Software,careers,http://localhost:8000/pinecrest-software/careers.html
+Quanta Security,products,http://localhost:8000/quanta-security/products.html
+Quanta Security,pricing,http://localhost:8000/quanta-security/pricing.html
+Quanta Security,about,http://localhost:8000/quanta-security/about.html
+Quanta Security,news,http://localhost:8000/quanta-security/news.html
+Quanta Security,careers,http://localhost:8000/quanta-security/careers.html
+Skyline DevOps,products,http://localhost:8000/skyline-devops/products.html
+Skyline DevOps,pricing,http://localhost:8000/skyline-devops/pricing.html
+Skyline DevOps,about,http://localhost:8000/skyline-devops/about.html
+Skyline DevOps,news,http://localhost:8000/skyline-devops/news.html
+Skyline DevOps,careers,http://localhost:8000/skyline-devops/careers.html
+Tandem Workflows,products,http://localhost:8000/tandem-workflows/products.html
+Tandem Workflows,pricing,http://localhost:8000/tandem-workflows/pricing.html
+Tandem Workflows,about,http://localhost:8000/tandem-workflows/about.html
+Tandem Workflows,news,http://localhost:8000/tandem-workflows/news.html
+Tandem Workflows,careers,http://localhost:8000/tandem-workflows/careers.html
+Vertex Learning,products,http://localhost:8000/vertex-learning/products.html
+Vertex Learning,pricing,http://localhost:8000/vertex-learning/pricing.html
+Vertex Learning,about,http://localhost:8000/vertex-learning/about.html
+Vertex Learning,news,http://localhost:8000/vertex-learning/news.html
+Vertex Learning,careers,http://localhost:8000/vertex-learning/careers.html
+Ledgerly,products,http://localhost:8000/ledgerly/products.html
+Ledgerly,pricing,http://localhost:8000/ledgerly/pricing.html
+Ledgerly,about,http://localhost:8000/ledgerly/about.html
+Ledgerly,news,http://localhost:8000/ledgerly/news.html
+Ledgerly,careers,http://localhost:8000/ledgerly/careers.html
+PayHarbor,products,http://localhost:8000/payharbor/products.html
+PayHarbor,pricing,http://localhost:8000/payharbor/pricing.html
+PayHarbor,about,http://localhost:8000/payharbor/about.html
+PayHarbor,news,http://localhost:8000/payharbor/news.html
+PayHarbor,careers,http://localhost:8000/payharbor/careers.html
+Mintwise,products,http://localhost:8000/mintwise/products.html
+Mintwise,pricing,http://localhost:8000/mintwise/pricing.html
+Mintwise,about,http://localhost:8000/mintwise/about.html
+Mintwise,news,http://localhost:8000/mintwise/news.html
+Mintwise,careers,http://localhost:8000/mintwise/careers.html
+Stackbank,products,http://localhost:8000/stackbank/products.html
+Stackbank,pricing,http://localhost:8000/stackbank/pricing.html
+Stackbank,about,http://localhost:8000/stackbank/about.html
+Stackbank,news,http://localhost:8000/stackbank/news.html
+Stackbank,careers,http://localhost:8000/stackbank/careers.html
+Greenfield Logistics,products,http://localhost:8000/greenfield-logistics/products.html
+Greenfield Logistics,pricing,http://localhost:8000/greenfield-logistics/pricing.html
+Greenfield Logistics,about,http://localhost:8000/greenfield-logistics/about.html
+Greenfield Logistics,news,http://localhost:8000/greenfield-logistics/news.html
+Greenfield Logistics,careers,http://localhost:8000/greenfield-logistics/careers.html
+Meridian Health Tech,products,http://localhost:8000/meridian-health-tech/products.html
+Meridian Health Tech,pricing,http://localhost:8000/meridian-health-tech/pricing.html
+Meridian Health Tech,about,http://localhost:8000/meridian-health-tech/about.html
+Meridian Health Tech,news,http://localhost:8000/meridian-health-tech/news.html
+Meridian Health Tech,careers,http://localhost:8000/meridian-health-tech/careers.html
+Summit Retail Systems,products,http://localhost:8000/summit-retail-systems/products.html
+Summit Retail Systems,pricing,http://localhost:8000/summit-retail-systems/pricing.html
+Summit Retail Systems,about,http://localhost:8000/summit-retail-systems/about.html
+Summit Retail Systems,news,http://localhost:8000/summit-retail-systems/news.html
+Summit Retail Systems,careers,http://localhost:8000/summit-retail-systems/careers.html
+Ironclad Manufacturing,products,http://localhost:8000/ironclad-manufacturing/products.html
+Ironclad Manufacturing,pricing,http://localhost:8000/ironclad-manufacturing/pricing.html
+Ironclad Manufacturing,about,http://localhost:8000/ironclad-manufacturing/about.html
+Ironclad Manufacturing,news,http://localhost:8000/ironclad-manufacturing/news.html
+Ironclad Manufacturing,careers,http://localhost:8000/ironclad-manufacturing/careers.html

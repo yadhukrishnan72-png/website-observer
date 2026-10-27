@@ -1,0 +1,8 @@
+.env
+observer.db
+__pycache__/
+*.pyc
+demo_sites/
+gtm-systems-thinking-agent/
+__MACOSX/
+.DS_Store

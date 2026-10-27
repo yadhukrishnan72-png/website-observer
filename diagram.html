@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Daily Website Observer - Architecture</title>
+<style>
+:root{
+  --bg:#f6f7f9; --card:#fff; --ink:#1b1f27; --muted:#5d6675; --line:#d9dde4;
+  --input:#2563eb; --input-bg:#e8effd;
+  --proc:#475569;  --proc-bg:#eef0f3;
+  --gate:#b45309;  --gate-bg:#fdf1de;
+  --out:#047857;   --out-bg:#e2f5ec;
+  --act:#7c3aed;   --act-bg:#efe8fd;
+  --drop:#9aa1ad;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#12151b; --card:#1b2029; --ink:#e8ebf0; --muted:#9aa4b2; --line:#2e3542;
+    --input:#7aa2f7; --input-bg:#1c2640;
+    --proc:#aab4c3;  --proc-bg:#242a35;
+    --gate:#f0b35c;  --gate-bg:#3a2d17;
+    --out:#4fd1a1;   --out-bg:#15332a;
+    --act:#b79cff;   --act-bg:#2b2342;
+    --drop:#6b7384;
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+.wrap{max-width:1280px;margin:0 auto;padding:28px 16px 56px}
+h1{font-size:26px;margin:0 0 4px}
+.sub{color:var(--muted);margin:0 0 28px}
+h2{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:40px 0 12px}
+
+/* main flow */
+.flow{display:grid;grid-template-columns:repeat(5,1fr);gap:28px;align-items:start}
+.col{position:relative}
+.col:not(:last-child)::after{content:"\2192";position:absolute;right:-22px;top:46px;font-size:22px;color:var(--muted)}
+.colhead{font-weight:700;font-size:12px;letter-spacing:.1em;text-transform:uppercase;padding:6px 10px;border-radius:6px;margin-bottom:10px;display:inline-block}
+.c-in .colhead{background:var(--input-bg);color:var(--input)}
+.c-pr .colhead{background:var(--proc-bg);color:var(--proc)}
+.c-de .colhead{background:var(--gate-bg);color:var(--gate)}
+.c-ou .colhead{background:var(--out-bg);color:var(--out)}
+.c-ac .colhead{background:var(--act-bg);color:var(--act)}
+.box{background:var(--card);border:1px solid var(--line);border-left-width:4px;border-radius:8px;padding:10px 12px;margin-bottom:10px;font-size:13.5px}
+.box b{display:block;font-size:14px;margin-bottom:2px}
+.box small{color:var(--muted);font-size:12.5px;display:block}
+.c-in .box{border-left-color:var(--input)}
+.c-pr .box{border-left-color:var(--proc)}
+.c-de .box{border-left-color:var(--gate)}
+.c-ou .box{border-left-color:var(--out)}
+.c-ac .box{border-left-color:var(--act)}
+.n{display:inline-block;min-width:20px;height:20px;line-height:20px;text-align:center;border-radius:10px;background:var(--proc-bg);color:var(--proc);font-size:11px;font-weight:700;margin-right:6px}
+.gate .n{background:var(--gate-bg);color:var(--gate)}
+.stop{color:var(--drop);font-size:12px;margin-top:4px}
+.stop::before{content:"\2192 stop: "}
+
+/* funnel */
+.funnel{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px}
+.frow{display:grid;grid-template-columns:200px 1fr 90px;gap:12px;align-items:center;margin:8px 0}
+.fbar{height:30px;border-radius:6px;background:var(--gate-bg);border:1px solid var(--gate);display:flex;align-items:center;padding-left:10px;font-size:13px;color:var(--gate);white-space:nowrap;overflow:hidden}
+.fbar.out{background:var(--out-bg);border-color:var(--out);color:var(--out)}
+.fcnt{text-align:right;font-variant-numeric:tabular-nums;color:var(--muted);font-size:13px}
+.flabel b{display:block;font-size:13.5px}
+.flabel span{font-size:12px;color:var(--muted)}
+.note{font-size:12.5px;color:var(--muted);margin-top:10px}
+
+/* two-up */
+.two{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--muted);font-weight:600;font-size:12px}
+code{font:12.5px ui-monospace,Consolas,monospace;background:var(--proc-bg);padding:1px 5px;border-radius:4px}
+.ign{color:var(--drop)} .sig{color:var(--out);font-weight:600}
+
+/* demo strip */
+.demo{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
+.step{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:13px}
+.step i{font-style:normal;font-weight:700;color:var(--act);display:block;font-size:12px;margin-bottom:2px}
+.step.a{border-top:3px solid var(--drop)}
+.step.b{border-top:3px solid var(--out)}
+
+/* slack mock */
+.slack{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--out);border-radius:8px;padding:14px 16px;font-size:13.5px}
+.slack div{margin-bottom:6px}.slack b{display:block;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+
+@media (max-width:1000px){
+  .flow{grid-template-columns:1fr;gap:18px}
+  .col:not(:last-child)::after{content:"\2193";right:auto;left:10px;top:auto;bottom:-24px}
+  .col{margin-bottom:14px}
+  .two{grid-template-columns:1fr}
+  .demo{grid-template-columns:1fr 1fr}
+  .frow{grid-template-columns:1fr;gap:4px}
+  .fcnt{text-align:left}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Daily Website Observer: ABM Trigger Intelligence</h1>
+  <p class="sub">Pilot architecture. Python + SQLite + Claude API + Slack webhook + Streamlit. Nothing alerts unless it survives every gate.</p>
+
+  <h2>System flow</h2>
+  <div class="flow">
+    <div class="col c-in">
+      <span class="colhead">Inputs</span>
+      <div class="box"><b>Account list</b>Company, URL, industry, owner, priority<small>accounts.csv, 20 synthetic accounts</small></div>
+      <div class="box"><b>Page list</b>3-5 pages per account<small>Product, Pricing, About, News, Careers</small></div>
+      <div class="box"><b>Dummy websites</b>Static HTML on localhost:8000<small>You edit these live during the demo</small></div>
+      <div class="box"><b>Previous snapshot</b>Last cleaned text blocks<small>from SQLite</small></div>
+      <div class="box"><b>Trigger</b>"Run observer" button / CLI<small>Daily schedule documented, not demo-critical</small></div>
+    </div>
+
+    <div class="col c-pr">
+      <span class="colhead">Processing</span>
+      <div class="box"><span class="n">1</span><b style="display:inline">Fetch</b><small>requests, 10s timeout, 1 retry</small></div>
+      <div class="box"><span class="n">2</span><b style="display:inline">Clean</b><small>Strip script/style/nav/footer/cookie banners</small></div>
+      <div class="box"><span class="n">3</span><b style="display:inline">Extract text blocks</b><small>Headings, paragraphs, list items</small></div>
+      <div class="box"><span class="n">4</span><b style="display:inline">Hash + block diff</b><small>difflib: added[] / removed[]</small></div>
+      <div class="box"><span class="n">5</span><b style="display:inline">LLM analysis</b><small>Judge, classify, summarise, why it matters, outreach angle, evidence quote</small></div>
+      <div class="box"><span class="n">6</span><b style="display:inline">Validate + dedupe</b><small>Evidence must appear in the diff; fingerprint check</small></div>
+    </div>
+
+    <div class="col c-de">
+      <span class="colhead">Decisions</span>
+      <div class="box gate"><span class="n">D1</span><b style="display:inline">First time seen?</b><div class="stop">save baseline, no alert</div></div>
+      <div class="box gate"><span class="n">D2</span><b style="display:inline">Hash unchanged?</b><div class="stop">log "unchanged"</div></div>
+      <div class="box gate"><span class="n">D3</span><b style="display:inline">Only noise left?</b><small>year, cookie, nav, footer, trivial rewording</small><div class="stop">log "ignored" + rule name</div></div>
+      <div class="box gate"><span class="n">D4</span><b style="display:inline">LLM: meaningful?</b><small>Generic wording, formatting, boilerplate = no</small><div class="stop">log "ignored (LLM)" + reason</div></div>
+      <div class="box gate"><span class="n">D5</span><b style="display:inline">Evidence valid, confidence High/Med, not duplicate?</b><div class="stop">Low confidence goes to dashboard Review</div></div>
+    </div>
+
+    <div class="col c-ou">
+      <span class="colhead">Outputs</span>
+      <div class="box"><b>Slack alert</b>#gtm-triggers<small>Change, signal type, why it matters, outreach angle, source, confidence</small></div>
+      <div class="box"><b>Dashboard change feed</b>Alerted / Ignored (with reason) / Review<small>The proof the filter works</small></div>
+      <div class="box"><b>Snapshot + diff viewer</b><small>Before/after, evidence highlighted</small></div>
+      <div class="box"><b>Run log</b><small>Pages checked, changed, alerted, errors</small></div>
+    </div>
+
+    <div class="col c-ac">
+      <span class="colhead">GTM action</span>
+      <div class="box"><b>BDR reads the alert</b><small>30-second triage instead of manual site checking</small></div>
+      <div class="box"><b>Copies / adapts the outreach angle</b><small>Specific detail, tied to the signal</small></div>
+      <div class="box"><b>Sends timely outreach</b><small>The human sends. Nothing is auto-sent.</small></div>
+      <div class="box"><b>Shares context with AE</b><small>Source URL + evidence quote</small></div>
+    </div>
+  </div>
+
+  <h2>The funnel: why it doesn't alert on everything (illustrative daily run)</h2>
+  <div class="funnel">
+    <div class="frow"><div class="flabel"><b>Pages checked</b><span>20 accounts x 4 pages</span></div><div class="fbar" style="width:100%">80 pages</div><div class="fcnt">80</div></div>
+    <div class="frow"><div class="flabel"><b>Past D2: content changed</b><span>hash differs</span></div><div class="fbar" style="width:18%">changed</div><div class="fcnt">~14</div></div>
+    <div class="frow"><div class="flabel"><b>Past D3: not just noise</b><span>rule filter, free</span></div><div class="fbar" style="width:8%">&nbsp;</div><div class="fcnt">~5</div></div>
+    <div class="frow"><div class="flabel"><b>Past D4: LLM says meaningful</b><span>only these cost tokens</span></div><div class="fbar" style="width:4%">&nbsp;</div><div class="fcnt">~2</div></div>
+    <div class="frow"><div class="flabel"><b>Past D5: Slack alerts</b><span>High / Medium, valid, new</span></div><div class="fbar out" style="width:2.5%">&nbsp;</div><div class="fcnt">~1-2</div></div>
+    <p class="note">Numbers are illustrative to show the shape. In the demo: Scenario A produces changes but 0 alerts; Scenario B produces exactly 1.</p>
+  </div>
+
+  <h2>Output example and decision log</h2>
+  <div class="two">
+    <div class="panel">
+      <div class="slack">
+        <div><strong>🚨 New GTM Trigger: Acme AI</strong></div>
+        <div><b>Change</b>Acme AI launched a new AI Agents product.</div>
+        <div><b>Signal type</b>New Product Launch</div>
+        <div><b>Why it matters</b>Expanding into autonomous agents, which suggests a new buyer persona and GTM motion.</div>
+        <div><b>Suggested outreach angle</b>Reference the AI Agents launch; ask how they plan to position it with existing customers vs. new buyers.</div>
+        <div><b>Source</b>http://localhost:8000/acme-ai/products.html</div>
+        <div><b>Confidence</b>High</div>
+      </div>
+    </div>
+    <div class="panel">
+      <table>
+        <tr><th>Change detected</th><th>Verdict</th><th>Why</th></tr>
+        <tr class="ign"><td>© 2025 → © 2026</td><td>Ignored</td><td><code>rule: copyright_year</code></td></tr>
+        <tr class="ign"><td>Cookie banner added</td><td>Ignored</td><td><code>rule: cookie_consent</code></td></tr>
+        <tr class="ign"><td>Nav link renamed</td><td>Ignored</td><td><code>rule: nav_footer</code></td></tr>
+        <tr class="ign"><td>"cutting-edge" → "innovative"</td><td>Ignored</td><td><code>llm: generic wording</code></td></tr>
+        <tr class="sig"><td>"Introducing Acme Agents…" added</td><td>ALERT</td><td>New Product Launch, High</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <h2>Data model (SQLite)</h2>
+  <div class="panel">
+    <table>
+      <tr><th>Table</th><th>Purpose</th><th>Key fields</th></tr>
+      <tr><td><code>accounts</code></td><td>Target accounts</td><td>company_name, website_url, industry, owner, priority</td></tr>
+      <tr><td><code>pages</code></td><td>Monitored pages, N per account</td><td>account_id, page_type, url</td></tr>
+      <tr><td><code>snapshots</code></td><td>Cleaned content per fetch</td><td>page_id, fetched_at, content_hash, blocks (JSON)</td></tr>
+      <tr><td><code>changes</code></td><td>Every detected diff + outcome</td><td>old/new snapshot, added/removed blocks, status, reason</td></tr>
+      <tr><td><code>analyses</code></td><td>LLM result per change</td><td>meaningful, signal_type, confidence, summary, why, angle, evidence</td></tr>
+      <tr><td><code>alerts</code></td><td>What was sent, dedupe</td><td>fingerprint, channel, sent_at, success</td></tr>
+      <tr><td><code>runs</code></td><td>Run log</td><td>pages_checked, changed, alerted, errors</td></tr>
+    </table>
+    <p class="note">accounts 1-N pages 1-N snapshots · pages 1-N changes 1-1 analyses · changes 1-0..1 alerts</p>
+  </div>
+
+  <h2>Live demo flow (6-8 minutes)</h2>
+  <div class="demo">
+    <div class="step"><i>1</i>Show accounts table + original Acme AI site</div>
+    <div class="step a"><i>2 · Scenario A</i>Run noise script: year, cookie banner, nav, tagline</div>
+    <div class="step a"><i>3</i>Run observer. Slack silent; dashboard shows "Ignored" + reasons</div>
+    <div class="step b"><i>4 · Scenario B</i>Edit Products page live: add "Introducing Acme Agents"</div>
+    <div class="step b"><i>5</i>Run observer. Slack alert appears</div>
+    <div class="step"><i>6</i>Open diff + evidence; copy outreach angle into a draft</div>
+  </div>
+  <p class="note">Safety nets: <code>reset_demo.py</code>, console-print fallback if Slack fails, pre-recorded backup video.</p>
+</div>
+</body>
+</html>

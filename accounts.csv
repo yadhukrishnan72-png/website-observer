@@ -1,0 +1,21 @@
+company_name,website_url,industry,account_owner,priority
+Acme AI,http://localhost:8000/acme-ai/,SaaS,Yedhu,High
+Northwind Analytics,http://localhost:8000/northwind-analytics/,SaaS,Yedhu,High
+Brightpath HR,http://localhost:8000/brightpath-hr/,SaaS,Priya,Medium
+Cloudloom,http://localhost:8000/cloudloom/,SaaS,Priya,High
+Datastream Labs,http://localhost:8000/datastream-labs/,SaaS,Marco,Medium
+Helix Support,http://localhost:8000/helix-support/,SaaS,Marco,Low
+Orbit CRM,http://localhost:8000/orbit-crm/,SaaS,Yedhu,Medium
+Pinecrest Software,http://localhost:8000/pinecrest-software/,SaaS,Priya,Low
+Quanta Security,http://localhost:8000/quanta-security/,SaaS,Marco,High
+Skyline DevOps,http://localhost:8000/skyline-devops/,SaaS,Yedhu,Medium
+Tandem Workflows,http://localhost:8000/tandem-workflows/,SaaS,Priya,Low
+Vertex Learning,http://localhost:8000/vertex-learning/,SaaS,Marco,Medium
+Ledgerly,http://localhost:8000/ledgerly/,Fintech,Yedhu,High
+PayHarbor,http://localhost:8000/payharbor/,Fintech,Priya,Medium
+Mintwise,http://localhost:8000/mintwise/,Fintech,Marco,Low
+Stackbank,http://localhost:8000/stackbank/,Fintech,Yedhu,Medium
+Greenfield Logistics,http://localhost:8000/greenfield-logistics/,Logistics,Priya,Medium
+Meridian Health Tech,http://localhost:8000/meridian-health-tech/,Healthcare,Marco,High
+Summit Retail Systems,http://localhost:8000/summit-retail-systems/,Retail Tech,Yedhu,Low
+Ironclad Manufacturing,http://localhost:8000/ironclad-manufacturing/,Manufacturing,Priya,Low

@@ -285,9 +285,10 @@ elif view == "Demo scenarios":
     st.caption("Each scenario edits a different company's website. Pick one in the sidebar (or apply them all), "
                "click Run observer now, then compare the last result with what was expected.")
     st.dataframe([{
-        "Scenario": s["title"], "Company": s["company"], "What changes": s["story"],
+        "Scenario": s["title"], "Company": s["company"],
         "Expected": ("Alert: " + " + ".join(a[0] for a in s["alerts"])) if s["alerts"] else "Ignored, no alert",
-        "Applied": "Yes" if scenarios.is_applied(s) else "No", "Last result": last_result(s)}
+        "Applied": "Yes" if scenarios.is_applied(s) else "No", "Last result": last_result(s),
+        "What changes": s["story"]}
         for s in scenarios.SCENARIOS], hide_index=True,
         alt="Demo scenarios with the company each applies to, the expected result and the latest outcome")
 

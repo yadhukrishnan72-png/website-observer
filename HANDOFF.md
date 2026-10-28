@@ -38,6 +38,9 @@ fetch -> clean -> diff -> noise rules -> analyzer (Claude or mock) -> dedupe -> 
 - Never put Slack, Attio, Airtable or Anthropic secrets in the hosted app: any visitor could trigger posts and resets. The hosted demo is shared by all visitors (one site folder, one database); Reset demo to baseline fixes it.
 - The repo excludes `.env`, `observer.db`, `demo_sites/` (regenerated) and the unrelated `gtm-systems-thinking-agent/` and `__MACOSX/` folders.
 
+## Look and feel
+- Clay-inspired light/dark theme in `.streamlit/config.toml` (see DECISIONS D24-D26). Verified in headless Edge: headings render in DM Sans and body in Inter. Changing the look = editing that file only.
+
 ## Next steps
 1. **User:** get an Anthropic API key into `.env` (`ANTHROPIC_API_KEY=...`), then run `python evaluate.py` and `python demo_scripts/rehearse.py` again. Claude analysis and Claude drafting have never been tested against the real API; the current 100% scores measure the keyword stand-in against cases written alongside it.
 2. Walk through the dashboard in a real browser (only headless-tested so far).

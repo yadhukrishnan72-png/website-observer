@@ -60,6 +60,11 @@ Newest context first within each group. Full reasoning for the original design i
 - **D22. The stand-in analyzer got one new rule for new customer segments.** The stand-in is rule-based and shaped to these scenarios; the scores in `evaluate.py` and `test_scenarios.py` measure the rules, not an AI. Real validation needs a Claude key.
 - **D23. `acme-noise` is outside the "Apply all" bundle** because it edits the same Acme products page as the product launch scenario.
 
+## Visual design (2026-10-28)
+- **D24. The dashboard is themed after clay.com through Streamlit's own theme file** (`.streamlit/config.toml`, light and dark), with no custom CSS. Colors are Clay's published palette tokens read from its stylesheet (blueberry, matcha, pomegranate, tangarine, lemon, ube, grey, oat; dark mode uses its deep blueberry navy). Every text, link, button and badge pair meets 4.5:1 contrast.
+- **D25. Clay's fonts (Roobert, Canela) are licensed, so they are not embedded.** The theme uses Inter (which clay.com also uses), DM Sans for headings and DM Mono for code, loaded from Google Fonts.
+- **D26. In the scenarios table the result columns come first**, ahead of the long "What changes" description, so they stay visible without scrolling.
+
 ## Deferred or rejected
 - Real email sending, LinkedIn automation: out of scope for the pilot.
 - Auto-discovery of decision makers: rejected for now (D7).

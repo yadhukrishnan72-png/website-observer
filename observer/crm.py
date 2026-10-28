@@ -6,14 +6,14 @@
 Either destination failing never blocks the alert: the failure is recorded and retried on the next run.
 """
 import json
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from . import airtable, attio, outreach
 
 MAX_CHANGE_CHARS = 1500
 COLUMNS = ["status", "company_url", "person_url", "trigger_entry_id", "message_entry_id", "contact_name",
            "contact_title", "contact_email", "subject", "body", "model", "error", "airtable_status",
-           "airtable_record_id", "airtable_url", "airtable_error"]
+           "airtable_record_id", "airtable_url", "airtable_error", "draft_notes"]
 
 
 def _now():
@@ -44,7 +44,22 @@ def _load_alert(conn, change_id):
         "JOIN accounts a ON a.id = p.account_id "
         "JOIN analyses an ON an.id = (SELECT MAX(id) FROM analyses WHERE change_id = ch.id) WHERE ch.id = ?",
         (change_id,)).fetchone()
-    return dict(row)
+    alert = dict(row)
+    alert["others"] = _other_alerts(conn, alert["company"], change_id)
+    return alert
+
+
+def _other_alerts(conn, company, change_id, days=30):
+    """Signals already alerted for the same account, so an email can cover the combined picture (funding, hiring and
+    a new leader at once) instead of one change at a time."""
+    cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat(timespec="seconds")
+    rows = conn.execute(
+        "SELECT an.signal_type, an.evidence, ch.added_blocks, ch.removed_blocks, p.page_type FROM changes ch "
+        "JOIN pages p ON p.id = ch.page_id JOIN accounts a ON a.id = p.account_id "
+        "JOIN analyses an ON an.id = (SELECT MAX(id) FROM analyses WHERE change_id = ch.id) "
+        "WHERE a.company_name = ? AND ch.status = 'alerted' AND ch.id != ? AND ch.detected_at >= ? ORDER BY ch.id",
+        (company, change_id, cutoff)).fetchall()
+    return [dict(r) for r in rows]
 
 
 def _trigger_values(alert):
@@ -102,7 +117,7 @@ def _sync_attio(alert, result):
                           contact_email=contact.get("email"), person_url=contact.get("web_url"))
             if draft["status"] == "drafted":
                 result.update(message_entry_id=draft["entry_id"], subject=draft["subject"], body=draft["body"],
-                              model=draft["model"])
+                              model=draft["model"], draft_notes=json.dumps(draft.get("notes")))
             else:
                 result.update(status=draft["status"], error=draft.get("error"))
     except attio.AttioError as e:
@@ -116,7 +131,8 @@ def _sync_local(alert, result):
     result.update(status="local", error=None, contact_name=contact.get("name"), contact_title=contact.get("title"),
                   contact_email=contact.get("email"))
     if draft["status"] == "drafted":
-        result.update(subject=draft["subject"], body=draft["body"], model=draft["model"])
+        result.update(subject=draft["subject"], body=draft["body"], model=draft["model"],
+                      draft_notes=json.dumps(draft.get("notes")))
     else:
         result.update(status=draft["status"], error=draft.get("error"))
 

@@ -27,6 +27,7 @@ Funnel: hash match (free) -> rule filter (free) -> LLM only on surviving changed
 - Drafts are always status Draft; nothing is ever sent to a prospect. Seller claims come only from `seller.py` and must not include results or numbers.
 - To test without posting to Slack, set `SLACK_WEBHOOK_URL=` (empty) in the process environment. Clean up test entries in Attio (`attio.clear_entries()`); never delete companies or people that the user did not ask to remove.
 - Windows console is cp1252: set `PYTHONIOENCODING=utf-8` in test scripts that print emoji.
+- Email copy lives in `observer/playbooks.py`; change wording there, then run `python -m evaluation.test_playbooks` (length, banned phrases, facts) and `python demo_scripts/sample_emails.py` to read the results. Never let a draft state a fact that is not in the detected change.
 - Streamlit: follow the developing-with-streamlit skill (no custom CSS, `width="stretch"`, test with `st.testing.v1.AppTest`).
 
 ## Do not

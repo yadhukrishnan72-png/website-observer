@@ -235,6 +235,13 @@ def render_details(r):
         if r["body"]:
             st.caption(f"Draft by {r['draft_model']} (status Draft in Attio)")
             st.code(f"Subject: {r['subject']}\n\n{r['body']}", language="text", wrap_lines=True)
+            if r["draft_notes"]:
+                n = json.loads(r["draft_notes"])
+                st.markdown(f"**Why this message** ({n.get('playbook')}, written for a {n.get('persona_lens')} persona)")
+                st.markdown(f"Clay angle: {n.get('clay_angle')}")
+                st.caption(f"Evidence: “{n.get('evidence')}” · source {n.get('source_url')}")
+                if n.get("also_on_account"):
+                    st.caption("Also on this account: " + ", ".join(n["also_on_account"]))
     if added or removed:
         st.markdown("**Content change that reached the analyzer**")
         st.code("\n".join([f"- {b}" for b in removed] + [f"+ {b}" for b in added]), language="diff")
@@ -282,7 +289,7 @@ if view == "Change feed":
                            an.evidence, an.model, cs.status AS crm_status, cs.company_url, cs.person_url,
                            cs.contact_name, cs.contact_title, cs.subject, cs.body, cs.model AS draft_model,
                            cs.error AS crm_error, cs.contact_email, cs.airtable_status, cs.airtable_url,
-                           cs.airtable_error
+                           cs.airtable_error, cs.draft_notes
                     FROM changes ch JOIN pages p ON p.id = ch.page_id JOIN accounts a ON a.id = p.account_id
                     LEFT JOIN analyses an ON an.id = (SELECT MAX(id) FROM analyses WHERE change_id = ch.id)
                     LEFT JOIN crm_sync cs ON cs.change_id = ch.id

@@ -1,35 +1,46 @@
-"""Turn an alert into a draft outreach message for the account's decision maker, saved in Attio.
+"""Turn an alert into a draft outreach email for the account's decision maker.
 
-Same provider switch as the analyzer: Claude when ANTHROPIC_API_KEY is set, otherwise a template
-stand-in labelled 'mock-heuristic'. Drafts are only ever created with status Draft; the BDR edits,
-approves and sends them.
+Each email follows one structure: reference the specific change, give the GTM implication in one sentence, connect
+Clay to that problem, and close with one low-friction offer. The per-trigger wording lives in playbooks.py.
+
+Same provider switch as the analyzer: Claude when ANTHROPIC_API_KEY is set, otherwise the playbook stand-in labelled
+'mock-heuristic' (template-based, not an AI). Whatever writes the draft, it must pass validate() before it is saved.
+Drafts are only ever created with status Draft; the BDR edits, approves and sends them.
 """
 import csv
 import json
 import re
 from pathlib import Path
 
-from . import analyzer, attio, config, seller
+from . import analyzer, attio, config, playbooks, seller
 
 ROOT = Path(__file__).resolve().parent.parent
-MAX_WORDS = 130
-MAX_SUBJECT = 100
+MIN_WORDS, MAX_WORDS = playbooks.MIN_WORDS, playbooks.MAX_WORDS
+MAX_SUBJECT = 80
 
-SYSTEM_PROMPT = """You write short first-touch outreach emails for a B2B sales development rep.
+SYSTEM_PROMPT = f"""You write first-touch outbound emails for a BDR at {seller.NAME} to a decision maker at a target \
+account. A change was detected on that account's website.
 
-You are given a business signal detected on a target account's website and the decision maker to write to.
+Structure, as four short paragraphs of plain text:
+1. Reference the specific change, using the facts provided.
+2. One concise sentence on what that usually means for go-to-market.
+3. Connect {seller.NAME} directly to that problem or opportunity, using the Clay angle provided. Name {seller.NAME} \
+and say what it does; do not hide the pitch. One or two sentences.
+4. One low-friction call to action: offer to show how {seller.NAME} could support that specific initiative.
 
 Rules:
-- 60 to 100 words. Plain text, no markdown, no bullet points.
-- Open with the specific signal (use the evidence wording), not with flattery or "I hope this finds you well".
-- Tie it to what someone in the contact's role cares about, in one sentence.
-- Mention the seller's product once, linking the signal to one capability from the seller context. No feature lists.
-- End with one low-pressure question. No hard pitch, no meeting links, no invented urgency.
-- Use only facts present in the input. Never invent numbers, customer names, results or claims about the \
-contact beyond their name and title.
-- Address the contact by first name and sign off with the rep's first name.
+- {playbooks.MIN_WORDS} to {playbooks.MAX_WORDS} words in total, including the greeting and sign-off. Conversational, \
+specific and credible, like a person wrote it.
+- Use only the facts provided. Never invent facts about the company or the contact. Where the evidence is thin, hedge \
+("usually", "often", "if") instead of asserting.
+- Write the call to action as an offer ("happy to show you ..."), not a question about availability. At most one \
+question mark in the whole email. No exclamation marks.
+- Never use these words or phrases: {", ".join(playbooks.BANNED)}.
+- Do not put the source URL in the email.
+- Address the contact by first name. Sign off as: Best, then the rep's first name, then {seller.NAME}, each on its own line.
+- The subject line must be specific to the trigger, under 70 characters, with no hype.
 
-Reply with ONLY a JSON object: {"subject": "<under 70 characters>", "body": "<the email>"}."""
+Reply with ONLY a JSON object: {{"subject": "...", "body": "..."}}."""
 
 
 # --------------------------------------------------------------------------- providers
@@ -37,67 +48,30 @@ Reply with ONLY a JSON object: {"subject": "<under 70 characters>", "body": "<th
 def _claude_draft(ctx):
     import anthropic
     client = anthropic.Anthropic(timeout=45.0)
-    user = (f"Company: {ctx['company']}\nContact: {ctx['contact_name']}, {ctx['contact_title']}\n"
-            f"Rep: {ctx['owner']}\nSignal type: {ctx['signal_type']}\n"
-            f"What changed: {ctx['change_summary']}\nEvidence from the page: {ctx['evidence']}\n"
-            f"Why it matters: {ctx['why_it_matters']}\nSuggested angle: {ctx['outreach_angle']}")
+    user = f"Rep: {ctx.get('owner')}\n" + playbooks.guidance(ctx)
     resp = client.messages.create(
-        model=config.model_name(), max_tokens=1000, system=SYSTEM_PROMPT + "\n\nSeller context: " + seller.prompt_context(),
+        model=config.model_name(), max_tokens=1200,
+        system=SYSTEM_PROMPT + "\n\nSeller context: " + seller.prompt_context(),
         output_config={"effort": "low"}, messages=[{"role": "user", "content": user}])
     if resp.stop_reason == "refusal":
         raise RuntimeError("model refused")
     text = "".join(b.text for b in resp.content if b.type == "text")
-    return analyzer._parse_json(text), config.model_name()
-
-
-INTRO = re.compile(r"^(?:introducing|meet|announcing)\s+(.+?)(?:[:,.—]|$)", re.I)
-
-# signal type -> (opening sentence, closing question, subject); {c}=company, {x}=what. The middle of the
-# email comes from seller.BRIDGES, which ties the signal to what the seller does.
-TEMPLATES = {
-    "New Product Launch": ("I saw {c} just introduced {x}.",
-                           "How are you planning to bring {x} to your existing customers?", "{x} at {c}"),
-    "New Product Category": ("I saw {c} just introduced {x}.",
-                             "How are you approaching positioning for {x} versus your existing buyers?",
-                             "{x} at {c}"),
-    "Pricing Change": ("I noticed {c} changed its pricing or packaging.",
-                       "How is the new structure landing with prospects so far?", "{c}'s new pricing"),
-    "Leadership Change": ("I saw the leadership update at {c}.",
-                          "What is at the top of the list for the next couple of quarters?",
-                          "Leadership news at {c}"),
-    "Funding Announcement": ("I saw {c}'s funding news.",
-                             "Where are you planning to invest first?", "{c}'s funding news"),
-    "Major Partnership": ("I saw {c}'s partnership announcement.",
-                          "How does this change your go-to-market plans?", "{c}'s new partnership"),
-    "Market Expansion": ("I saw {c} is expanding.",
-                         "How are you planning to ramp up in the new market?", "{c}'s expansion"),
-    "Strategic Initiative": ("I saw {c}'s recent strategic announcement.",
-                             "What outcome are you aiming for in the first year?", "{c}'s strategic move"),
-    "Hiring / Growth Signal": ("I noticed {c} is building out the team.",
-                               "What are you scaling first?", "Building out GTM at {c}"),
-}
-
-
-def _mock_draft(ctx):
-    opening, question, subject = TEMPLATES.get(ctx["signal_type"], TEMPLATES["Strategic Initiative"])
-    m = INTRO.match(ctx["evidence"] or "")
-    fill = {"c": ctx["company"], "x": m.group(1).strip() if m else "this"}
-    first, rep = ctx["contact_name"].split()[0], (ctx["owner"] or "").split()[0] or "the team"
-    body = (f"Hi {first},\n\n{opening.format(**fill)} The page says: \"{ctx['evidence']}\"\n\n"
-            f"As {ctx['contact_title']}, you may already be thinking about this. "
-            f"{seller.BRIDGES.get(ctx['signal_type'], seller.ONE_LINER)} {question.format(**fill)}\n\n"
-            f"Best,\n{rep}\n{seller.NAME}")
-    return {"subject": subject.format(**fill), "body": body}, "mock-heuristic"
+    result = analyzer._parse_json(text)
+    _, notes = playbooks.compose(ctx)
+    if isinstance(result, dict) and isinstance(result.get("body"), str):
+        notes["word_count"] = len(result["body"].split())
+    return dict(result, notes=notes), config.model_name()
 
 
 def draft(ctx):
-    """Returns (draft dict with subject and body, model label). Raises on provider failure."""
+    """Returns (draft dict with subject, body and internal notes, model label). Raises on provider failure."""
     if config.llm_provider() == "claude":
         try:
             return _claude_draft(ctx)
         except (ValueError, json.JSONDecodeError):          # bad JSON: one retry
             return _claude_draft(ctx)
-    return _mock_draft(ctx)
+    result, notes = playbooks.compose(ctx)
+    return dict(result, notes=notes), "mock-heuristic"
 
 
 # --------------------------------------------------------------------------- validation
@@ -111,13 +85,34 @@ def validate(d, ctx):
         return "empty subject or body"
     if len(subject) > MAX_SUBJECT:
         return "subject too long"
-    if len(body.split()) > MAX_WORDS:
-        return f"body longer than {MAX_WORDS} words"
+    words = len(body.split())
+    if not MIN_WORDS <= words <= MAX_WORDS:
+        return f"body has {words} words; expected {MIN_WORDS}-{MAX_WORDS}"
+    low = (subject + " " + body).lower()
     if ctx["contact_name"].split()[0].lower() not in body.lower():
         return "draft does not address the contact by first name"
+    if seller.NAME.lower() not in body.lower():
+        return f"draft does not mention {seller.NAME}"
+    rep = (ctx.get("owner") or "").split()[0].lower()
+    if rep and rep not in body.lower():
+        return "draft is not signed by the account owner"
     if re.search(r"[\[\]{}<>]", subject + body):
         return "draft contains placeholder-like characters"
-    source = " ".join([ctx["evidence"] or "", ctx["change_summary"], ctx["why_it_matters"], ctx["outreach_angle"]])
+    if "!" in subject + body:
+        return "draft contains an exclamation mark"
+    if body.count("?") > 1:
+        return "draft has more than one call to action question"
+    if len([p for p in body.split("\n\n") if p.strip()]) < 4:
+        return "draft does not follow the reference / implication / Clay / offer structure"
+    if re.search(r"[a-z0-9],\s+[A-Z][a-z]+ing\b", body):
+        return "draft pastes page text into a sentence (capitalised fragment after a comma)"
+    for phrase in playbooks.BANNED:
+        if phrase in low:
+            return f"draft uses a banned phrase ({phrase!r})"
+    grounding = playbooks.grounding_words(ctx)
+    if grounding and not any(w in body.lower() for w in grounding):
+        return "draft does not reference the detected change"
+    source = playbooks.source_text(ctx)
     for number in re.findall(r"\d[\d,.]*", subject + " " + body):
         if number.rstrip(",.") not in source:
             return f"draft contains a number not in the source ({number.rstrip(',.')}): possible invented fact"
@@ -127,8 +122,9 @@ def validate(d, ctx):
 # --------------------------------------------------------------------------- orchestration
 
 def create_draft(alert, company=None):
-    """alert: company, website_url, owner, signal_type, change_summary, why_it_matters, outreach_angle,
-    evidence. company: the Attio company record if the caller already has it (id, web_url).
+    """alert: company, website_url, owner, signal_type, change_summary, why_it_matters, outreach_angle, evidence,
+    url and the changed page text; optionally 'others' (other signals on the same account). company: the Attio
+    company record if the caller already has it (id, web_url).
     Returns a dict with a 'status': drafted | no_contact | draft_failed | crm_failed."""
     try:
         company = company or attio.assert_company(alert["company"], attio.placeholder_domain(alert["website_url"]))
@@ -150,7 +146,7 @@ def create_draft(alert, company=None):
             "signal": alert["signal_type"], "company": alert["company"], "account_owner": alert["owner"],
             "drafted_by": model})
         return {"status": "drafted", "contact": contact, "subject": result["subject"].strip(),
-                "body": result["body"].strip(), "model": model, "entry_id": entry_id,
+                "body": result["body"].strip(), "model": model, "entry_id": entry_id, "notes": result.get("notes"),
                 "person_url": contact["web_url"], "company_url": company["web_url"]}
     except attio.AttioError as e:
         return {"status": "crm_failed", "error": str(e)}
@@ -181,4 +177,4 @@ def create_local_draft(alert):
     if error:
         return {"status": "draft_failed", "error": error, "contact": contact}
     return {"status": "drafted", "contact": contact, "subject": result["subject"].strip(),
-            "body": result["body"].strip(), "model": model}
+            "body": result["body"].strip(), "model": model, "notes": result.get("notes")}

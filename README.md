@@ -32,6 +32,8 @@ Copy `.env.example` to `.env` and fill in any of `ANTHROPIC_API_KEY`, `SLACK_WEB
 ## Tests
 ```
 python evaluate.py                       # scores detection on 24 labelled cases
+python -m evaluation.test_playbooks      # email logic: facts, length, banned phrases, every wording
+python demo_scripts/sample_emails.py     # generates and audits an email for every demo scenario
 python demo_scripts/test_scenarios.py    # applies all 14 demo scenarios and checks every outcome
 python demo_scripts/rehearse.py          # failure paths: CRM down, table down, approval survives a retry
 ```

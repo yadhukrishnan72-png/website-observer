@@ -87,7 +87,8 @@ CREATE TABLE IF NOT EXISTS crm_sync (
     airtable_status TEXT,           -- pushed | failed | pending (waiting for Attio) | NULL when Airtable is off
     airtable_record_id TEXT,
     airtable_url TEXT,
-    airtable_error TEXT
+    airtable_error TEXT,
+    draft_notes TEXT                -- JSON: the internal analysis behind the draft (angle, evidence, source)
 );
 CREATE TABLE IF NOT EXISTS runs (
     id INTEGER PRIMARY KEY,
@@ -106,7 +107,7 @@ def connect(path=DB_PATH):
     conn.row_factory = sqlite3.Row
     conn.executescript(SCHEMA)
     have = {r["name"] for r in conn.execute("PRAGMA table_info(crm_sync)")}
-    for column in ("contact_email", "airtable_status", "airtable_record_id", "airtable_url", "airtable_error"):
+    for column in ("contact_email", "airtable_status", "airtable_record_id", "airtable_url", "airtable_error", "draft_notes"):
         if column not in have:                     # database created before Airtable was added
             conn.execute(f"ALTER TABLE crm_sync ADD COLUMN {column} TEXT")
     return conn

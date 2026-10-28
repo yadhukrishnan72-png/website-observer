@@ -38,6 +38,11 @@ fetch -> clean -> diff -> noise rules -> analyzer (Claude or mock) -> dedupe -> 
 - Never put Slack, Attio, Airtable or Anthropic secrets in the hosted app: any visitor could trigger posts and resets. The hosted demo is shared by all visitors (one site folder, one database); Reset demo to baseline fixes it.
 - The repo excludes `.env`, `observer.db`, `demo_sites/` (regenerated) and the unrelated `gtm-systems-thinking-agent/` and `__MACOSX/` folders.
 
+## Email generation
+- `observer/playbooks.py` (per-trigger playbooks and fact extraction), `observer/outreach.py` (drafting and validation). Review the output with `python demo_scripts/sample_emails.py` (add `--scenarios acme-hiring` for a single-signal email); test with `python -m evaluation.test_playbooks` (46 checks, including every wording combination staying within 70-110 words). See DECISIONS D30-D34.
+- The Claude drafting path (rewritten prompt plus playbook guidance) has never run against the live API; the stand-in writes the emails today and is labelled `mock-heuristic`.
+- Not yet done: nothing marks an older draft as superseded when a later combined draft is created for the same account.
+
 ## Look and feel
 - The dashboard follows a screenshot of clay.com the user supplied (`Design.png`, kept out of the repo): floating nav bar with a black "Run observer now" button, left rail with letter-spaced labels, hairline stat cells and a two-column card grid with outlined tags. Locked light theme in `.streamlit/config.toml` (Figtree font; Clay's Roobert is licensed) plus `assets/clay.css`, which targets only keyed containers and its own classes. `streamlit==1.66.1` is pinned so the CSS cannot break on an upgrade. See DECISIONS D27-D29.
 - Tab names in the top bar are shortened (Scenarios, Drafts, Snapshots); the underlying view names are unchanged.

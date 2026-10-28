@@ -61,7 +61,8 @@ Newest context first within each group. Full reasoning for the original design i
 - **D23. `acme-noise` is outside the "Apply all" bundle** because it edits the same Acme products page as the product launch scenario.
 
 ## Visual design (2026-10-28)
-- **D24. The dashboard is themed after clay.com through Streamlit's own theme file** (`.streamlit/config.toml`, light and dark), with no custom CSS. Colors are Clay's published palette tokens read from its stylesheet (blueberry, matcha, pomegranate, tangarine, lemon, ube, grey, oat; dark mode uses its deep blueberry navy). Every text, link, button and badge pair meets 4.5:1 contrast.
+- **D24. The dashboard is themed after clay.com through Streamlit's own theme file** (`.streamlit/config.toml`, light and dark), with no custom CSS. The identity colors were sampled from the rendered site: black buttons, the lime accent (#cbd810), cream panels (#f4f3f0) and the deep hero green (#01533c). Status colors use Clay's palette tokens. Light mode is white and cream with black buttons; dark mode is deep green. An earlier version used Clay's blueberry as the main accent and read as generic blue, so it was replaced. Every text, link, button and badge pair meets 4.5:1.
+- **D24a. Dark-mode buttons use a green, not lime**, because Streamlit puts white text on primary buttons and white on lime is unreadable. The cost is that selected pills in dark mode are a little dimmer.
 - **D25. Clay's fonts (Roobert, Canela) are licensed, so they are not embedded.** The theme uses Inter (which clay.com also uses), DM Sans for headings and DM Mono for code, loaded from Google Fonts.
 - **D26. In the scenarios table the result columns come first**, ahead of the long "What changes" description, so they stay visible without scrolling.
 

@@ -1,9 +1,10 @@
 [server]
 headless = true
 
-# Look and feel modelled on clay.com: Clay's own palette tokens (blueberry, matcha, pomegranate, tangarine, lemon,
-# ube, grey, oat) and a Roobert-style type system. Clay's Roobert and Canela are licensed fonts, so free look-alikes
-# are used: Inter (which clay.com also uses), DM Sans for headings and DM Mono for code.
+# Look and feel modelled on clay.com: black buttons, the lime accent (#cbd810), cream panels (#f4f3f0) and the deep
+# hero green (#01533c), sampled from the rendered site; status colors use Clay's palette tokens. Clay's Roobert and
+# Canela are licensed fonts, so free look-alikes are used: Inter (which clay.com also uses), DM Sans for headings and
+# DM Mono for code.
 
 [theme]
 font = "Inter:https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap, sans-serif"
@@ -13,61 +14,61 @@ headingFontSizes = ["2.25rem", "1.75rem", "1.375rem", "1.125rem"]
 headingFontWeights = [600, 600, 600, 600]
 metricValueFontSize = "1.75rem"
 metricValueFontWeight = 600
-baseRadius = "0.75rem"
-buttonRadius = "full"
+baseRadius = "1rem"
+buttonRadius = "0.625rem"
 showWidgetBorder = true
 linkUnderline = false
 
 [theme.light]
-primaryColor = "#0667d9"                 # blueberry-600
+primaryColor = "#000000"                 # Clay's black call-to-action
 backgroundColor = "#ffffff"
-secondaryBackgroundColor = "#f9f8f6"     # oat-100
-textColor = "#16181f"                    # grey-950
-linkColor = "#0053b5"                    # blueberry-700
-borderColor = "#d6d9df"                  # grey-300
-codeBackgroundColor = "#f3f2ed"          # oat-200
-codeTextColor = "#282c35"                # grey-900
-dataframeBorderColor = "#e6e8ec"         # grey-200
-dataframeHeaderBackgroundColor = "#f3f2ed"
-dataframeHeaderTextColor = "#282c35"
-blueColor = "#0667d9"
-blueBackgroundColor = "#d7ebfe"          # blueberry-100
-blueTextColor = "#01418d"                # blueberry-800
-greenColor = "#0dac65"                   # matcha-500
-greenBackgroundColor = "#dbffe0"         # matcha-100
-greenTextColor = "#02693e"               # matcha-700
+secondaryBackgroundColor = "#f4f3f0"     # Clay's cream panel
+textColor = "#000000"
+linkColor = "#01533c"                    # Clay's hero green
+borderColor = "#dedbd3"                  # cream-toned
+codeBackgroundColor = "#f4f3f0"
+codeTextColor = "#16181f"                # grey-950
+dataframeBorderColor = "#e7e4dc"
+dataframeHeaderBackgroundColor = "#f4f3f0"
+dataframeHeaderTextColor = "#16181f"
+blueColor = "#01533c"                    # info boxes: Clay hero green on cream
+blueBackgroundColor = "#f4f3f0"          # Clay cream
+blueTextColor = "#01533c"
+greenColor = "#2f7751"                   # Clay's hill green
+greenBackgroundColor = "#e1f0e7"
+greenTextColor = "#01533c"               # Clay's hero green
 redColor = "#e94d68"                     # pomegranate-500
 redBackgroundColor = "#ffebec"           # pomegranate-100
 redTextColor = "#b21a3f"                 # pomegranate-700
 orangeColor = "#fc8936"                  # tangarine-500
 orangeBackgroundColor = "#ffe9d5"        # tangarine-100
 orangeTextColor = "#9f3e15"              # tangarine-800
-yellowColor = "#fbbd41"                  # lemon-500
-yellowBackgroundColor = "#fff8d2"        # lemon-100
-yellowTextColor = "#7f500a"              # lemon-900
+yellowColor = "#cbd810"                  # Clay's lime
+yellowBackgroundColor = "#fcfee2"        # lime-100
+yellowTextColor = "#5e5e00"
 violetColor = "#8b5cf6"                  # ube-500
 violetBackgroundColor = "#e9e4ff"        # ube-100
 violetTextColor = "#5c15cc"              # ube-700
 grayColor = "#717989"                    # grey-600
 grayBackgroundColor = "#eff1f3"          # grey-100
 grayTextColor = "#525a69"                # grey-700
-chartCategoricalColors = ["#0382f7", "#ff7ad5", "#fbbd41", "#0dac65", "#8b5cf6", "#3bd3fd", "#fc8936", "#e94d68"]
+chartCategoricalColors = ["#01533c", "#cbd810", "#000000", "#0382f7", "#ff7ad5", "#fbbd41", "#8b5cf6", "#e94d68"]
 
 [theme.dark]
-primaryColor = "#429dff"                 # blueberry-300
-backgroundColor = "#001433"              # Clay's deep blueberry navy
-secondaryBackgroundColor = "#001e4b"     # blueberry-950
-textColor = "#f7f8f9"                    # grey-50
-linkColor = "#83c4ff"                    # blueberry-300 (light)
-borderColor = "#01418d"                  # blueberry-800
-codeBackgroundColor = "#002f67"          # blueberry-900
-codeTextColor = "#d7ebfe"
-dataframeBorderColor = "#01418d"
-dataframeHeaderBackgroundColor = "#002f67"
-dataframeHeaderTextColor = "#d7ebfe"
-blueColor = "#429dff"
-blueBackgroundColor = "#002f67"
-blueTextColor = "#bee0ff"                # blueberry-200
+primaryColor = "#34845a"                 # Clay hill green, lightened: white button text still passes 4.5:1
+backgroundColor = "#012e22"              # darker shade of Clay's hero green
+secondaryBackgroundColor = "#01533c"     # Clay's hero green
+textColor = "#fefdfb"
+linkColor = "#eef673"                    # lime-200
+borderColor = "#2f7751"                  # Clay's hill green
+codeBackgroundColor = "#01533c"
+codeTextColor = "#fcfee2"
+dataframeBorderColor = "#2f7751"
+dataframeHeaderBackgroundColor = "#01533c"
+dataframeHeaderTextColor = "#fefdfb"
+blueColor = "#eef673"                    # info boxes: lime-200
+blueBackgroundColor = "#01533c"          # Clay hero green
+blueTextColor = "#fefdfb"
 greenColor = "#0dac65"
 greenBackgroundColor = "#03331d"         # matcha-900
 greenTextColor = "#bcf4ca"               # matcha-200
@@ -77,13 +78,13 @@ redTextColor = "#ffe5f7"                 # dragonfruit-100
 orangeColor = "#fc8936"
 orangeBackgroundColor = "#752b12"        # tangarine-900
 orangeTextColor = "#fdd4b7"              # tangarine-200
-yellowColor = "#fbbd41"
-yellowBackgroundColor = "#7f500a"        # lemon-900
-yellowTextColor = "#fef0a4"              # lemon-200
+yellowColor = "#cbd810"
+yellowBackgroundColor = "#102b02"        # lime-500
+yellowTextColor = "#eef673"              # lime-200
 violetColor = "#8b5cf6"
 violetBackgroundColor = "#32037d"        # ube-900
 violetTextColor = "#d8d0ff"              # ube-200
 grayColor = "#979da9"
 grayBackgroundColor = "#3c414d"          # grey-800
 grayTextColor = "#d6d9df"                # grey-300
-chartCategoricalColors = ["#429dff", "#ff7ad5", "#fbbd41", "#0dac65", "#8b5cf6", "#3bd3fd", "#fc8936", "#e94d68"]
+chartCategoricalColors = ["#cbd810", "#fefdfb", "#2f7751", "#429dff", "#ff7ad5", "#fbbd41", "#8b5cf6", "#e94d68"]

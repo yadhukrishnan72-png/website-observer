@@ -39,7 +39,8 @@ fetch -> clean -> diff -> noise rules -> analyzer (Claude or mock) -> dedupe -> 
 - The repo excludes `.env`, `observer.db`, `demo_sites/` (regenerated) and the unrelated `gtm-systems-thinking-agent/` and `__MACOSX/` folders.
 
 ## Look and feel
-- Clay-inspired light/dark theme in `.streamlit/config.toml`: black + cream + lime in light, deep green in dark (see DECISIONS D24-D26). Verified in headless Edge: headings render in DM Sans and body in Inter. Changing the look = editing that file only.
+- The dashboard follows a screenshot of clay.com the user supplied (`Design.png`, kept out of the repo): floating nav bar with a black "Run observer now" button, left rail with letter-spaced labels, hairline stat cells and a two-column card grid with outlined tags. Locked light theme in `.streamlit/config.toml` (Figtree font; Clay's Roobert is licensed) plus `assets/clay.css`, which targets only keyed containers and its own classes. `streamlit==1.66.1` is pinned so the CSS cannot break on an upgrade. See DECISIONS D27-D29.
+- Tab names in the top bar are shortened (Scenarios, Drafts, Snapshots); the underlying view names are unchanged.
 
 ## Next steps
 1. **User:** get an Anthropic API key into `.env` (`ANTHROPIC_API_KEY=...`), then run `python evaluate.py` and `python demo_scripts/rehearse.py` again. Claude analysis and Claude drafting have never been tested against the real API; the current 100% scores measure the keyword stand-in against cases written alongside it.

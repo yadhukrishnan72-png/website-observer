@@ -66,6 +66,10 @@ Newest context first within each group. Full reasoning for the original design i
 - **D25. Clay's fonts (Roobert, Canela) are licensed, so they are not embedded.** The theme uses Inter (which clay.com also uses), DM Sans for headings and DM Mono for code, loaded from Google Fonts.
 - **D26. In the scenarios table the result columns come first**, ahead of the long "What changes" description, so they stay visible without scrolling.
 
+- **D27. The dashboard follows a screenshot of clay.com supplied by the user** (`Design.png`, kept out of the repo): a floating white nav bar with a black call-to-action, a left rail with letter-spaced labels and outlined inputs, hairline-separated stat cells, a two-column card grid with outlined tags, and Clay's exact grey, cream and blue tokens. The theme is locked to light so it always matches; the dark theme was dropped.
+- **D28. This look uses a small stylesheet (`assets/clay.css`)**, an exception to "theme file only" because the layout cannot be done through theme options. It targets only keyed containers (`st.container(key=...)`) and its own classes, and `requirements.txt` pins `streamlit==1.66.1` so the styling cannot break on a new release.
+- **D29. Clay's typeface (Roobert) is licensed, so Figtree is used as the closest free font.** If a Roobert license is available, add the font files and a `[[theme.fontFaces]]` entry in `.streamlit/config.toml`.
+
 ## Deferred or rejected
 - Real email sending, LinkedIn automation: out of scope for the pilot.
 - Auto-discovery of decision makers: rejected for now (D7).

@@ -1,5 +1,6 @@
 """Daily Website Observer dashboard.  Run:  streamlit run app.py"""
 import contextlib
+import html
 import io
 import json
 import subprocess
@@ -77,11 +78,43 @@ if query("SELECT COUNT(*) AS n FROM snapshots")[0]["n"] == 0:             # firs
     with st.spinner("First start: taking a baseline snapshot of the 20 demo company sites..."):
         run_observer_captured()
 
-# ----------------------------------------------------------------------------- header
+# ----------------------------------------------------------------------------- look and feel
 
-st.title(":material/radar: Daily Website Observer")
-st.caption("Internal GTM tool (example seller: Clay). Monitors target-account websites, alerts the BDR only on "
-           "commercially meaningful changes, and saves the trigger and a draft message in Attio.")
+st.html(f"<style>{(ROOT / 'assets' / 'clay.css').read_text(encoding='utf-8')}</style>")
+
+SIGNAL_ICON = {"New Product Launch": "rocket_launch", "New Product Category": "rocket_launch", "Pricing Change": "sell",
+               "Leadership Change": "person", "Funding Announcement": "payments", "Major Partnership": "handshake",
+               "Market Expansion": "public", "Strategic Initiative": "flag", "Hiring / Growth Signal": "group_add"}
+
+
+def esc(value):
+    """Everything shown through st.html comes from the database or the scraped sites, so it is always escaped."""
+    return html.escape("" if value is None else str(value))
+
+
+def icon(name, css="cell-icon"):
+    return f'<span class="material-symbols-rounded {css}">{esc(name)}</span>'
+
+
+def chip(text, muted=False):
+    return f'<span class="chip{" muted" if muted else ""}">{esc(text)}</span>'
+
+
+def side_label(text):
+    st.html(f'<div class="side-label"><span>{esc(text)}</span><i></i></div>')
+
+
+# ----------------------------------------------------------------------------- navigation
+
+NAV_LABEL = {"Demo scenarios": "Scenarios", "Outreach drafts": "Drafts", "Pages and snapshots": "Snapshots"}
+with st.container(key="topband"):
+    with st.container(key="topnav", horizontal=True, vertical_alignment="center", horizontal_alignment="distribute"):
+        st.html(f'<div class="brand">{icon("radar", "brand-icon")}observer</div>')
+        view = st.segmented_control("View", VIEWS, default=VIEWS[0], key="views", label_visibility="collapsed",
+                                    format_func=lambda v: NAV_LABEL.get(v, v)) or VIEWS[0]
+        run_clicked = st.button("Run observer now", type="primary", key="run", icon=":material/play_arrow:")
+
+# ----------------------------------------------------------------------------- header
 
 provider = config.llm_provider()
 analysis_text = (f"Claude ({config.model_name()})" if provider == "claude"
@@ -89,21 +122,24 @@ analysis_text = (f"Claude ({config.model_name()})" if provider == "claude"
 alert_text = "Slack webhook" if slack.webhook_url() else "console fallback (no Slack webhook set)"
 crm_text = "Attio" if attio.enabled() else "off (no ATTIO_API_KEY set)"
 table_text = "Airtable" if airtable.enabled() else "off (no Airtable settings in .env)"
-st.caption(f"Analysis and drafts: **{analysis_text}** · Alerts: **{alert_text}** · CRM: **{crm_text}** · "
-           f"Working table: **{table_text}**")
+
+st.html('<div class="page-title">Daily Website Observer</div>'
+        '<p class="page-sub">Internal GTM tool (example seller: Clay). Monitors target-account websites, alerts the BDR '
+        'only on commercially meaningful changes, and saves the trigger and a draft message in Attio.</p>'
+        f'<p class="meta">Analysis and drafts: <b>{esc(analysis_text)}</b> · Alerts: <b>{esc(alert_text)}</b> · '
+        f'CRM: <b>{esc(crm_text)}</b> · Working table: <b>{esc(table_text)}</b></p>')
 
 if not (slack.webhook_url() or attio.enabled() or airtable.enabled()):
-    st.info("**Safe demo mode.** Slack, Attio and Airtable are switched off, so nothing leaves this app. Alerts "
-            "appear in the run log below, the decision maker comes from placeholder contacts, and drafts are kept "
-            "locally. The analyzer is a rule-based stand-in, not an AI. The demo is shared: if the sites look "
-            "already edited, press Reset demo to baseline in the sidebar.", icon=":material/shield:")
+    st.html(f'<div class="notice">{icon("shield", "")}<div><b>Safe demo mode.</b> Slack, Attio and Airtable are '
+            'switched off, so nothing leaves this app. Alerts appear in the run log below, the decision maker comes '
+            'from placeholder contacts, and drafts are kept locally. The analyzer is a rule-based stand-in, not an AI. '
+            'The demo is shared: if the sites look already edited, press Reset demo to baseline in the sidebar.'
+            '</div></div>')
 
 with st.sidebar:
-    st.header("Demo helpers")
-    st.caption("Edit the Acme AI dummy site by hand, or use these shortcuts. Serve the sites with "
-               "`python -m http.server 8000 --directory demo_sites`.")
+    side_label("Scenario")
     labels = {s["id"]: scenarios.label(s) for s in scenarios.SCENARIOS}
-    pick = st.selectbox("Scenario", list(labels), format_func=labels.get)
+    pick = st.selectbox("Scenario", list(labels), format_func=labels.get, label_visibility="collapsed")
     st.caption(scenarios.BY_ID[pick]["story"])
     if st.button("Apply scenario", icon=":material/play_circle:", width="stretch"):
         ok, msg = scenarios.apply(pick)
@@ -112,27 +148,28 @@ with st.sidebar:
                  help="Every scenario except the original Acme noise one, which overlaps with the Acme product change."):
         failed = [f"{sid}: {msg}" for sid, ok, msg in scenarios.apply_bundle() if not ok]
         if failed:
-            st.error("\n\n".join(failed))
+            st.error(" · ".join(failed))
         else:
             st.success("All demo scenarios applied. Now click Run observer now.")
-    st.divider()
-    confirm = st.checkbox("I understand reset wipes local history and the demo triggers, drafts and table rows "
-                          "in Attio and Airtable")
-    if st.button("Reset demo to baseline", icon=":material/restart_alt:", width="stretch", disabled=not confirm):
-        ok, out = run_script("generate_demo_sites.py")
-        db.DB_PATH.unlink(missing_ok=True)
-        cleared = attio.clear_entries() if attio.enabled() else 0
-        rows_cleared = airtable.clear_rows() if airtable.enabled() else 0
-        counts, _ = run_observer_captured()
-        extra = (f"{cleared} Attio entries" if attio.enabled() else "") + (
-            " and " if attio.enabled() and airtable.enabled() else "") + (
-            f"{rows_cleared} Airtable rows" if airtable.enabled() else "")
-        st.success("Sites regenerated, " + (extra + " cleared, " if extra else "")
-                   + f"baseline taken ({counts.get('new', 0)} pages).")
-
-top = st.container(horizontal=True, vertical_alignment="center")
-run_clicked = top.button("Run observer now", type="primary", icon=":material/play_arrow:")
-top.caption("Fetches every monitored page, compares with the last snapshot, and alerts on meaningful changes.")
+    side_label("Reset")
+    with st.container(key="rail-reset"):
+        with st.expander("Reset demo"):
+            confirm = st.checkbox("I understand reset wipes local history and the demo triggers, drafts and table rows "
+                                  "in Attio and Airtable")
+            if st.button("Reset demo to baseline", icon=":material/restart_alt:", width="stretch", disabled=not confirm):
+                ok, out = run_script("generate_demo_sites.py")
+                db.DB_PATH.unlink(missing_ok=True)
+                cleared = attio.clear_entries() if attio.enabled() else 0
+                rows_cleared = airtable.clear_rows() if airtable.enabled() else 0
+                counts, _ = run_observer_captured()
+                extra = (f"{cleared} Attio entries" if attio.enabled() else "") + (
+                    " and " if attio.enabled() and airtable.enabled() else "") + (
+                    f"{rows_cleared} Airtable rows" if airtable.enabled() else "")
+                st.success("Sites regenerated, " + (extra + " cleared, " if extra else "")
+                           + f"baseline taken ({counts.get('new', 0)} pages).")
+    side_label("About")
+    st.caption("Edit the Acme AI dummy site by hand, or use the scenarios above. Serve the sites locally with "
+               "`python -m http.server 8000 --directory demo_sites`.")
 
 if run_clicked:
     with st.status("Running observer...", expanded=True) as status:
@@ -144,7 +181,7 @@ if run_clicked:
         if log.strip():
             st.code(log.strip(), language="text")
 
-# ----------------------------------------------------------------------------- KPIs
+# ----------------------------------------------------------------------------- stats
 
 kpi = query("""SELECT
     (SELECT COUNT(*) FROM accounts WHERE active = 1) AS accounts,
@@ -154,19 +191,89 @@ kpi = query("""SELECT
     (SELECT COUNT(*) FROM changes WHERE status = 'alerted') AS alerted,
     (SELECT COUNT(*) FROM crm_sync WHERE body IS NOT NULL) AS drafts,
     (SELECT COUNT(*) FROM crm_sync WHERE airtable_status = 'pushed') AS rows""")[0]
-with st.container(horizontal=True):
-    st.metric("Target accounts", kpi["accounts"], border=True)
-    st.metric("Pages monitored", kpi["pages"], border=True)
-    st.metric("Changes detected", kpi["changes"], border=True)
-    st.metric("Ignored as noise", kpi["ignored"], border=True)
-    st.metric("Alerts sent", kpi["alerted"], border=True)
-    st.metric("Email drafts", kpi["drafts"], border=True)
-    if airtable.enabled():
-        st.metric("Rows in Airtable", kpi["rows"], border=True)
-
-view = st.segmented_control("View", VIEWS, default=VIEWS[0], label_visibility="collapsed") or VIEWS[0]
+stats = [("Target accounts", kpi["accounts"]), ("Pages monitored", kpi["pages"]), ("Changes detected", kpi["changes"]),
+         ("Ignored as noise", kpi["ignored"]), ("Alerts sent", kpi["alerted"]), ("Email drafts", kpi["drafts"])]
+if airtable.enabled():
+    stats.append(("Rows in Airtable", kpi["rows"]))
+with st.container(key="stats"):
+    stat_cols = st.columns(len(stats), gap=None)
+    for i, (name, value) in enumerate(stats):
+        with stat_cols[i].container(key=f"stat-{'last' if i == len(stats) - 1 else i}"):
+            st.metric(name, value)
 
 # ----------------------------------------------------------------------------- change feed
+
+SIGNAL_STATUSES = ("alerted", "alert_failed", "review", "duplicate", "alert_ready")
+
+
+def render_details(r):
+    added, removed = json.loads(r["added_blocks"]), json.loads(r["removed_blocks"])
+    ignored = json.loads(r["ignored"])
+    if r["signal_type"]:
+        st.markdown(f"**Why it matters:** {r['why_it_matters']}")
+        st.markdown(f"**Suggested outreach angle:** {r['outreach_angle']}")
+        st.markdown(f"**Evidence:** “{r['evidence']}”")
+        st.caption(f"Analyzed by {r['model']} · source {r['url']}")
+    if r["airtable_status"]:
+        st.markdown("**Airtable**")
+        st.markdown(f"Status: `{r['airtable_status']}`")
+        if r["airtable_error"]:
+            st.caption(f"Detail: {r['airtable_error']}")
+        if r["airtable_url"]:
+            st.link_button("Row in Airtable", r["airtable_url"], icon=":material/open_in_new:")
+    if r["crm_status"]:
+        st.markdown("**Contact and draft**")
+        who = f"{r['contact_name']}, {r['contact_title']}" if r["contact_name"] else "no decision maker on file"
+        st.markdown(f"Status: `{r['crm_status']}` · Decision maker: {who}")
+        if r["crm_error"]:
+            st.caption(f"Detail: {r['crm_error']}")
+        links = st.container(horizontal=True)
+        if r["company_url"]:
+            links.link_button("Company in Attio", r["company_url"], icon=":material/open_in_new:")
+        if r["person_url"]:
+            links.link_button("Contact and draft in Attio", r["person_url"], icon=":material/open_in_new:")
+        if r["body"]:
+            st.caption(f"Draft by {r['draft_model']} (status Draft in Attio)")
+            st.code(f"Subject: {r['subject']}\n\n{r['body']}", language="text", wrap_lines=True)
+    if added or removed:
+        st.markdown("**Content change that reached the analyzer**")
+        st.code("\n".join([f"- {b}" for b in removed] + [f"+ {b}" for b in added]), language="diff")
+    if ignored:
+        st.markdown("**Filtered out as noise**")
+        st.dataframe([{"Rule": i["rule"], "Side": i.get("side", ""), "Text": i["text"][:160]} for i in ignored],
+                     hide_index=True, alt="Noise filtered out for this change")
+    if r["status"] in ("alerted", "alert_failed"):
+        st.markdown("**Slack message**")
+        st.code(slack.format_alert({
+            "company": r["company_name"], "change_summary": r["change_summary"], "signal_type": r["signal_type"],
+            "why_it_matters": r["why_it_matters"], "outreach_angle": r["outreach_angle"], "url": r["url"],
+            "confidence": r["confidence"], "owner": r["owner"], "priority": r["priority"],
+            "crm_status": r["crm_status"], "crm_error": r["crm_error"], "company_url": r["company_url"],
+            "person_url": r["person_url"], "contact_name": r["contact_name"], "contact_title": r["contact_title"],
+            "draft_subject": r["subject"], "draft_body": r["body"], "airtable_status": r["airtable_status"],
+            "airtable_url": r["airtable_url"], "airtable_error": r["airtable_error"]}), language="markdown")
+
+
+def feed_cell(r):
+    """One card of the change feed: icon and status, company, what changed, tags, then the details."""
+    label, color = STATUS_LABEL.get(r["status"], (r["status"], "gray"))
+    has_signal = bool(r["signal_type"]) and r["status"] in SIGNAL_STATUSES
+    left, right = st.columns([2, 3], vertical_alignment="center")
+    left.html(icon(SIGNAL_ICON.get(r["signal_type"], "radar") if has_signal else "do_not_disturb_on"))
+    with right.container(horizontal=True, horizontal_alignment="right", vertical_alignment="center", gap="xsmall"):
+        st.badge(label, color=color)
+        if r["crm_status"] == "crm_failed":
+            st.badge("Attio retry pending", color="orange")
+        if r["airtable_status"] in ("failed", "pending"):
+            st.badge("Airtable retry pending", color="orange")
+    tags = (chip(r["signal_type"]) + chip(f"{r['confidence']} confidence", muted=True)) if has_signal else ""
+    tags += chip(f"{r['page_type']} page", muted=True) + chip(r["detected_at"].replace("T", " ")[:16] + " UTC", muted=True)
+    st.html(f'<div class="cell-title">{esc(r["company_name"])}</div>'
+            f'<p class="cell-desc">{esc(r["change_summary"] if has_signal else (r["reason"] or ""))}</p>'
+            f'<div class="chips">{tags}</div>')
+    with st.expander("Details"):
+        render_details(r)
+
 
 if view == "Change feed":
     rows = query("""SELECT ch.id, ch.detected_at, ch.status, ch.reason, ch.added_blocks, ch.removed_blocks, ch.ignored,
@@ -188,80 +295,19 @@ if view == "Change feed":
                             JOIN analyses an ON an.id = (SELECT MAX(id) FROM analyses WHERE change_id = ch.id)
                             WHERE ch.status = 'alerted' GROUP BY a.id HAVING COUNT(DISTINCT an.signal_type) >= 2""")
         if combined:
-            with st.container(border=True):
-                st.subheader("Combined growth signals")
-                st.caption("Accounts with more than one kind of signal alerted: the strongest outreach moments.")
-                for c in combined:
-                    st.markdown(f"**{c['company']}**: " + " + ".join(c["signals"].split(",")))
+            lines = "".join(f"<br><b>{esc(c['company'])}</b>: " + esc(" + ".join(c["signals"].split(",")))
+                            for c in combined)
+            st.html(f'<div class="notice">{icon("hub", "")}<div><b>Combined growth signals.</b> Accounts with more than '
+                    f'one kind of signal alerted: the strongest outreach moments.{lines}</div></div>')
         present = [s for s in STATUS_LABEL if any(r["status"] == s for r in rows)]
         chosen = st.pills("Show", present, selection_mode="multi", default=present,
                           format_func=lambda s: f"{STATUS_LABEL[s][0]} ({sum(r['status'] == s for r in rows)})")
-        for r in rows:
-            if r["status"] not in chosen:
-                continue
-            label, color = STATUS_LABEL.get(r["status"], (r["status"], "gray"))
-            with st.container(border=True):
-                head = st.container(horizontal=True, vertical_alignment="center")
-                head.badge(label, color=color)
-                if r["crm_status"] == "crm_failed":
-                    head.badge("Attio retry pending", color="orange")
-                if r["airtable_status"] in ("failed", "pending"):
-                    head.badge("Airtable retry pending", color="orange")
-                head.markdown(f"**{r['company_name']}** · {r['page_type']} page")
-                head.caption(f"{r['detected_at'].replace('T', ' ')[:19]} UTC · {r['reason'] or ''}")
-                if r["signal_type"] and r["status"] in ("alerted", "alert_failed", "review", "duplicate", "alert_ready"):
-                    st.markdown(f"**{r['signal_type']}** ({r['confidence']}): {r['change_summary']}")
-                with st.expander("Details"):
-                    added, removed = json.loads(r["added_blocks"]), json.loads(r["removed_blocks"])
-                    ignored = json.loads(r["ignored"])
-                    if r["signal_type"]:
-                        st.markdown(f"**Why it matters:** {r['why_it_matters']}")
-                        st.markdown(f"**Suggested outreach angle:** {r['outreach_angle']}")
-                        st.markdown(f"**Evidence:** “{r['evidence']}”")
-                        st.caption(f"Analyzed by {r['model']} · source {r['url']}")
-                    if r["airtable_status"]:
-                        st.markdown("**Airtable**")
-                        st.markdown(f"Status: `{r['airtable_status']}`")
-                        if r["airtable_error"]:
-                            st.caption(f"Detail: {r['airtable_error']}")
-                        if r["airtable_url"]:
-                            st.link_button("Row in Airtable", r["airtable_url"], icon=":material/open_in_new:")
-                    if r["crm_status"]:
-                        st.markdown("**Contact and draft**")
-                        who = (f"{r['contact_name']}, {r['contact_title']}" if r["contact_name"]
-                               else "no decision maker on file")
-                        st.markdown(f"Status: `{r['crm_status']}` · Decision maker: {who}")
-                        if r["crm_error"]:
-                            st.caption(f"Detail: {r['crm_error']}")
-                        links = st.container(horizontal=True)
-                        if r["company_url"]:
-                            links.link_button("Company in Attio", r["company_url"], icon=":material/open_in_new:")
-                        if r["person_url"]:
-                            links.link_button("Contact and draft in Attio", r["person_url"],
-                                              icon=":material/open_in_new:")
-                        if r["body"]:
-                            st.caption(f"Draft by {r['draft_model']} (status Draft in Attio)")
-                            st.code(f"Subject: {r['subject']}\n\n{r['body']}", language="text")
-                    if added or removed:
-                        st.markdown("**Content change that reached the analyzer**")
-                        st.code("\n".join([f"- {b}" for b in removed] + [f"+ {b}" for b in added]), language="diff")
-                    if ignored:
-                        st.markdown("**Filtered out as noise**")
-                        st.dataframe([{"Rule": i["rule"], "Side": i.get("side", ""), "Text": i["text"][:160]}
-                                      for i in ignored], hide_index=True, alt="Noise filtered out for this change")
-                    if r["status"] in ("alerted", "alert_failed"):
-                        st.markdown("**Slack message**")
-                        st.code(slack.format_alert({
-                            "company": r["company_name"], "change_summary": r["change_summary"],
-                            "signal_type": r["signal_type"], "why_it_matters": r["why_it_matters"],
-                            "outreach_angle": r["outreach_angle"], "url": r["url"], "confidence": r["confidence"],
-                            "owner": r["owner"], "priority": r["priority"], "crm_status": r["crm_status"],
-                            "crm_error": r["crm_error"], "company_url": r["company_url"],
-                            "person_url": r["person_url"], "contact_name": r["contact_name"],
-                            "contact_title": r["contact_title"], "draft_subject": r["subject"],
-                            "draft_body": r["body"], "airtable_status": r["airtable_status"],
-                            "airtable_url": r["airtable_url"], "airtable_error": r["airtable_error"]}),
-                                language="markdown")
+        shown = [r for r in rows if r["status"] in chosen]
+        for i in range(0, len(shown), 2):
+            cols = st.columns(2, gap=None)
+            for j, r in enumerate(shown[i:i + 2]):
+                with cols[j].container(key=f"cell-{'l' if j == 0 else 'r'}-{r['id']}"):
+                    feed_cell(r)
 
 # ----------------------------------------------------------------------------- outreach drafts
 
@@ -299,21 +345,25 @@ elif view == "Outreach drafts":
                       LEFT JOIN analyses an ON an.id = (SELECT MAX(id) FROM analyses WHERE change_id = ch.id)
                       ORDER BY cs.id DESC LIMIT 100""")
     if not drafts:
-        st.info("No drafts yet. A draft is created for each alert when Attio is configured.")
-    for d in drafts:
-        with st.container(border=True):
-            head = st.container(horizontal=True, vertical_alignment="center")
-            head.badge("Draft" if d["body"] else d["status"], color="blue" if d["body"] else "orange")
-            head.markdown(f"**{d['company_name']}** · {d['signal_type']}")
-            head.caption(f"{d['contact_name'] or 'no contact'}{', ' + d['contact_title'] if d['contact_title'] else ''}"
-                         f" · account owner {d['owner']}")
-            if d["body"]:
-                st.code(f"Subject: {d['subject']}\n\n{d['body']}", language="text")
-                st.caption(f"Drafted by {d['model']}. Edit, approve and mark Sent in Attio.")
-            elif d["error"]:
-                st.caption(f"Not created: {d['error']}")
-            if d["person_url"]:
-                st.link_button("Open in Attio", d["person_url"], icon=":material/open_in_new:")
+        st.info("No drafts yet. A draft is created for each alert.")
+    for i in range(0, len(drafts), 2):
+        cols = st.columns(2, gap=None)
+        for j, d in enumerate(drafts[i:i + 2]):
+            with cols[j].container(key=f"cell-{'l' if j == 0 else 'r'}-draft{d['id']}"):
+                left, right = st.columns([2, 3], vertical_alignment="center")
+                left.html(icon("mail"))
+                with right.container(horizontal=True, horizontal_alignment="right", vertical_alignment="center"):
+                    st.badge("Draft" if d["body"] else d["status"], color="gray" if d["body"] else "orange")
+                who = (d["contact_name"] or "No contact on file") + (f", {d['contact_title']}" if d["contact_title"] else "")
+                st.html(f'<div class="cell-title">{esc(d["company_name"])}</div><p class="cell-desc">{esc(who)}</p>'
+                        f'<div class="chips">{chip(d["signal_type"])}{chip("owner " + str(d["owner"]), muted=True)}</div>')
+                if d["body"]:
+                    st.code(f"Subject: {d['subject']}\n\n{d['body']}", language="text", wrap_lines=True)
+                    st.caption(f"Drafted by {d['model']}. Edit, approve and mark Sent in Attio.")
+                elif d["error"]:
+                    st.caption(f"Not created: {d['error']}")
+                if d["person_url"]:
+                    st.link_button("Open in Attio", d["person_url"], icon=":material/open_in_new:")
 
 # ----------------------------------------------------------------------------- accounts
 

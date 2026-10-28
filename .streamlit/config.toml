@@ -1,90 +1,61 @@
 [server]
 headless = true
 
-# Look and feel modelled on clay.com: black buttons, the lime accent (#cbd810), cream panels (#f4f3f0) and the deep
-# hero green (#01533c), sampled from the rendered site; status colors use Clay's palette tokens. Clay's Roobert and
-# Canela are licensed fonts, so free look-alikes are used: Inter (which clay.com also uses), DM Sans for headings and
-# DM Mono for code.
+# Look and feel taken from a screenshot of clay.com (Design.png): a white page, black text, black and cream buttons,
+# hairline grey rules (#e6e8ec), grey secondary text (#525a69) and blue links (#0382f7). The theme is locked to light
+# so it always matches. Clay's typeface (Roobert) is licensed and is not embedded: Figtree is the closest free font.
+# The layout details (floating nav, hairline grids, tags) live in assets/clay.css.
 
 [theme]
-font = "Inter:https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap, sans-serif"
-headingFont = "'DM Sans':https://fonts.googleapis.com/css2?family=DM+Sans:wght@500;600;700&display=swap, sans-serif"
-codeFont = "'DM Mono':https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap, monospace"
-headingFontSizes = ["2.25rem", "1.75rem", "1.375rem", "1.125rem"]
-headingFontWeights = [600, 600, 600, 600]
-metricValueFontSize = "1.75rem"
-metricValueFontWeight = 600
-baseRadius = "1rem"
-buttonRadius = "0.625rem"
-showWidgetBorder = true
-linkUnderline = false
-
-[theme.light]
-primaryColor = "#000000"                 # Clay's black call-to-action
+base = "light"
+primaryColor = "#000000"
 backgroundColor = "#ffffff"
-secondaryBackgroundColor = "#f4f3f0"     # Clay's cream panel
+secondaryBackgroundColor = "#f3f2ed"     # the cream of the 'Get a demo' button
 textColor = "#000000"
-linkColor = "#01533c"                    # Clay's hero green
-borderColor = "#dedbd3"                  # cream-toned
-codeBackgroundColor = "#f4f3f0"
-codeTextColor = "#16181f"                # grey-950
-dataframeBorderColor = "#e7e4dc"
-dataframeHeaderBackgroundColor = "#f4f3f0"
-dataframeHeaderTextColor = "#16181f"
-blueColor = "#01533c"                    # info boxes: Clay hero green on cream
-blueBackgroundColor = "#f4f3f0"          # Clay cream
-blueTextColor = "#01533c"
-greenColor = "#2f7751"                   # Clay's hill green
+linkColor = "#0382f7"
+linkUnderline = false
+borderColor = "#e6e8ec"
+showWidgetBorder = true
+showSidebarBorder = true
+baseRadius = "0.5rem"
+paddingTop = "0.5rem"
+buttonRadius = "0.75rem"
+font = "Figtree:https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap, sans-serif"
+headingFont = "Figtree:https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap, sans-serif"
+codeFont = "'DM Mono':https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap, monospace"
+headingFontSizes = ["2.25rem", "1.75rem", "1.5rem", "1.125rem"]
+headingFontWeights = [500, 500, 500, 500]
+metricValueFontSize = "2rem"
+metricValueFontWeight = 500
+codeBackgroundColor = "#f3f2ed"
+codeTextColor = "#16181f"
+dataframeBorderColor = "#e6e8ec"
+dataframeHeaderBackgroundColor = "#f7f8f9"
+dataframeHeaderTextColor = "#525a69"
+blueColor = "#0382f7"                    # blueberry-500
+blueBackgroundColor = "#ecf6ff"          # blueberry-50
+blueTextColor = "#01418d"
+greenColor = "#2f7751"
 greenBackgroundColor = "#e1f0e7"
-greenTextColor = "#01533c"               # Clay's hero green
-redColor = "#e94d68"                     # pomegranate-500
-redBackgroundColor = "#ffebec"           # pomegranate-100
-redTextColor = "#b21a3f"                 # pomegranate-700
-orangeColor = "#fc8936"                  # tangarine-500
-orangeBackgroundColor = "#ffe9d5"        # tangarine-100
-orangeTextColor = "#9f3e15"              # tangarine-800
-yellowColor = "#cbd810"                  # Clay's lime
-yellowBackgroundColor = "#fcfee2"        # lime-100
-yellowTextColor = "#5e5e00"
-violetColor = "#8b5cf6"                  # ube-500
-violetBackgroundColor = "#e9e4ff"        # ube-100
-violetTextColor = "#5c15cc"              # ube-700
-grayColor = "#717989"                    # grey-600
-grayBackgroundColor = "#eff1f3"          # grey-100
-grayTextColor = "#525a69"                # grey-700
-chartCategoricalColors = ["#01533c", "#cbd810", "#000000", "#0382f7", "#ff7ad5", "#fbbd41", "#8b5cf6", "#e94d68"]
-
-[theme.dark]
-primaryColor = "#34845a"                 # Clay hill green, lightened: white button text still passes 4.5:1
-backgroundColor = "#012e22"              # darker shade of Clay's hero green
-secondaryBackgroundColor = "#01533c"     # Clay's hero green
-textColor = "#fefdfb"
-linkColor = "#eef673"                    # lime-200
-borderColor = "#2f7751"                  # Clay's hill green
-codeBackgroundColor = "#01533c"
-codeTextColor = "#fcfee2"
-dataframeBorderColor = "#2f7751"
-dataframeHeaderBackgroundColor = "#01533c"
-dataframeHeaderTextColor = "#fefdfb"
-blueColor = "#eef673"                    # info boxes: lime-200
-blueBackgroundColor = "#01533c"          # Clay hero green
-blueTextColor = "#fefdfb"
-greenColor = "#0dac65"
-greenBackgroundColor = "#03331d"         # matcha-900
-greenTextColor = "#bcf4ca"               # matcha-200
+greenTextColor = "#01533c"
 redColor = "#e94d68"
-redBackgroundColor = "#8b045c"           # dragonfruit-900
-redTextColor = "#ffe5f7"                 # dragonfruit-100
+redBackgroundColor = "#ffebec"
+redTextColor = "#b21a3f"
 orangeColor = "#fc8936"
-orangeBackgroundColor = "#752b12"        # tangarine-900
-orangeTextColor = "#fdd4b7"              # tangarine-200
+orangeBackgroundColor = "#ffe9d5"
+orangeTextColor = "#9f3e15"
 yellowColor = "#cbd810"
-yellowBackgroundColor = "#102b02"        # lime-500
-yellowTextColor = "#eef673"              # lime-200
+yellowBackgroundColor = "#fcfee2"
+yellowTextColor = "#5e5e00"
 violetColor = "#8b5cf6"
-violetBackgroundColor = "#32037d"        # ube-900
-violetTextColor = "#d8d0ff"              # ube-200
-grayColor = "#979da9"
-grayBackgroundColor = "#3c414d"          # grey-800
-grayTextColor = "#d6d9df"                # grey-300
-chartCategoricalColors = ["#cbd810", "#fefdfb", "#2f7751", "#429dff", "#ff7ad5", "#fbbd41", "#8b5cf6", "#e94d68"]
+violetBackgroundColor = "#e9e4ff"
+violetTextColor = "#5c15cc"
+grayColor = "#717989"
+grayBackgroundColor = "#f3f2ed"
+grayTextColor = "#525a69"
+chartCategoricalColors = ["#000000", "#cbd810", "#0382f7", "#2f7751", "#ff7ad5", "#fbbd41", "#8b5cf6", "#e94d68"]
+
+[theme.sidebar]
+backgroundColor = "#ffffff"
+secondaryBackgroundColor = "#ffffff"   # white, outlined inputs like the reference search box
+borderColor = "#e6e8ec"

@@ -1,0 +1,92 @@
+/* Layout details copied from the supplied screenshot of clay.com (Design.png).
+   Rules target only keyed containers (.st-key-*) and the classes defined in app.py, never Streamlit's own class names.
+   Colors and fonts come from .streamlit/config.toml. */
+
+:root {
+  --line: #e6e8ec;
+  --line-strong: #d6d9df;
+  --muted: #717989;
+  --body: #525a69;
+  --cream: #f3f2ed;
+  --strip: #eee9df;
+}
+
+/* ---- top navigation: a white bar with rounded bottom corners floating on a cream strip ---------------------- */
+.st-key-topband {
+  background: var(--strip);
+  padding: 0 1.5rem 0.7rem 1.5rem;
+  margin: -1rem 0 1.5rem 0;
+}
+.st-key-topnav {
+  background: #fff;
+  border-radius: 0 0 1.75rem 1.75rem;
+  padding: 0.7rem 1.4rem;
+  min-height: 4.3rem;
+}
+.brand { display: flex; align-items: center; gap: 0.55rem; font-size: 1.7rem; font-weight: 600; letter-spacing: -0.03em; }
+.brand .brand-icon { font-size: 1.9rem; color: #000; }
+.st-key-views button {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  font-size: 1rem;
+  font-weight: 500;
+  padding: 0.35rem 0.75rem;
+  color: #000;
+}
+.st-key-views button[aria-checked="true"],
+.st-key-views button[aria-pressed="true"] { background: var(--cream) !important; }
+.st-key-run button { font-weight: 500; }
+
+/* ---- page title and notes ------------------------------------------------------------------------------------ */
+.page-title { font-size: 2.25rem; font-weight: 500; letter-spacing: -0.025em; margin: 0.25rem 0 0.35rem 0; }
+.page-sub { color: var(--body); font-size: 1.0625rem; margin: 0 0 0.5rem 0; max-width: 62rem; line-height: 1.5; }
+.meta { color: var(--muted); font-size: 0.9rem; margin: 0 0 1rem 0; }
+.meta b { color: #000; font-weight: 500; }
+.notice {
+  display: flex; gap: 0.7rem; align-items: flex-start;
+  background: var(--cream); color: var(--body); border-radius: 0.5rem;
+  padding: 0.85rem 1.1rem; margin: 0.25rem 0 1.25rem 0; font-size: 0.95rem; line-height: 1.5;
+}
+.notice .material-symbols-rounded { font-size: 1.25rem; color: #000; margin-top: 0.05rem; }
+.notice b { color: #000; font-weight: 600; }
+
+/* ---- left rail: small letter-spaced labels with a rule, like SEARCH / FILTERS --------------------------------- */
+.side-label {
+  display: flex; align-items: center; gap: 1rem; margin: 1.25rem 0 0.9rem 0;
+  font-size: 0.8rem; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted);
+}
+.side-label i { flex: 1; height: 1px; background: var(--line-strong); }
+
+/* ---- stat cells: hairline separated -------------------------------------------------------------------------- */
+.st-key-stats { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); margin-bottom: 1.5rem; }
+[class*="st-key-stat-"] { border-right: 1px solid var(--line); padding: 1rem 1.4rem; }
+[class*="st-key-stat-last"] { border-right: 0; }
+
+/* ---- card grid: two columns separated by hairlines ----------------------------------------------------------- */
+[class*="st-key-cell-"] { border-bottom: 1px solid var(--line); padding: 1.75rem 2rem 1.5rem 2rem; min-height: 14rem; }
+[class*="st-key-cell-l-"] { border-right: 1px solid var(--line); }
+.cell-icon { font-size: 2.1rem; color: #000; }
+.cell-title { font-size: 1.55rem; font-weight: 500; letter-spacing: -0.015em; margin: 0.9rem 0 0.35rem 0; line-height: 1.2; }
+.cell-desc { color: var(--body); font-size: 1.0625rem; line-height: 1.5; margin: 0 0 1.1rem 0; }
+.chips { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.5rem; }
+.chip {
+  display: inline-block; border: 1px solid var(--line); border-radius: 4px; background: #fff;
+  padding: 0.4rem 0.8rem; font-size: 0.95rem; color: #000; line-height: 1.2;
+}
+.chip.muted { color: var(--body); }
+.material-symbols-rounded { font-family: "Material Symbols Rounded"; font-weight: normal; font-style: normal;
+  line-height: 1; letter-spacing: normal; text-transform: none; display: inline-block; white-space: nowrap;
+  font-feature-settings: "liga"; -webkit-font-feature-settings: "liga"; }
+
+/* ---- expanders as flat rows with the chevron on the right, like the FILTERS list ------------------------------ */
+.st-key-rail-reset details, [class*="st-key-cell-"] details { border: 0; border-radius: 0; background: transparent; }
+.st-key-rail-reset summary, [class*="st-key-cell-"] summary {
+  flex-direction: row-reverse; justify-content: space-between; padding: 0.85rem 0.25rem; font-size: 1.0625rem;
+}
+[class*="st-key-cell-"] details { border-top: 1px solid var(--line); margin-top: 0.5rem; }
+.st-key-rail-reset summary > span, [class*="st-key-cell-"] summary > span {
+  flex-direction: row-reverse; justify-content: space-between; width: 100%;
+}
+.st-key-rail-reset details:not([open]) summary > span > span:first-child,
+[class*="st-key-cell-"] details:not([open]) summary > span > span:first-child { transform: rotate(90deg); }

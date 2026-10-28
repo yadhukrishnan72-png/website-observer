@@ -36,18 +36,18 @@ already waiting in Attio and Airtable."* (Clay is the example seller; edit `obse
 3. Pick *PayHarbor: Marketing tagline reword*, apply, run: **Ignored by analyzer** (the rules can't tell, the analyzer judges).
 4. Pick *Northwind Analytics: Funding announcement*, apply, run. Show, in order:
    Slack alert, then the Attio trigger and draft, then the Airtable row (Status = Draft, email subject and body, what changed).
-5. Open **Demo scenarios** in the dashboard to show each scenario, its company and the result.
+5. Open the **Scenarios** tab in the top bar to show each scenario, its company and the result.
 6. Finish with the combined case: pick *Orbit CRM: Combined growth signals*, apply, run. Three alerts for one
-   account; the last ones say **Also on this account**; the dashboard shows **Combined growth signals**.
+   account; the last ones say **Also on this account**; the Change feed shows a **Combined growth signals** note.
 7. In Airtable, set a row's Status to **Approved**. Say: "this is where a sequencer such as Instantly would pick it up;
    that connection is out of scope, nothing is ever sent."
 
 ## Full demo
-Sidebar: **Apply all demo scenarios**, then **Run observer now**. Expect 12 alerts across 9 companies, 3 ignored changes,
+Left rail: **Apply all demo scenarios**, then **Run observer now** (black button, top right). Expect 12 alerts across 9 companies, 3 ignored changes,
 12 Attio triggers and drafts, 12 Airtable rows.
 
 ## Reset between runs
-Sidebar: tick the box, then **Reset demo to baseline** (or `python demo_scripts/reset_demo.py`). A repeated alert is
+Left rail: open **Reset demo**, tick the box, then **Reset demo to baseline** (or `python demo_scripts/reset_demo.py`). A repeated alert is
 blocked as a duplicate for 30 days, so reset before re-running a scenario.
 
 ## Safety net

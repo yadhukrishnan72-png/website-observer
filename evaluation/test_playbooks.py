@@ -139,8 +139,13 @@ thin = ctx("Funding Announcement", "Acme AI news update", ["Acme AI news update"
 check("funding without an amount", "announced new funding." in playbooks.compose(dict(thin, **CONTACT))[0]["body"])
 thin_exec = ctx("Leadership Change", "Our team is growing", ["Our team is growing"])
 thin_body = playbooks.compose(dict(thin_exec, **CONTACT))[0]["body"]
-check("exec without a name quotes the page instead of inventing one",
-      '"Our team is growing"' in thin_body and "listed as" not in thin_body, thin_body.split("\n\n")[1])
+check("exec without a name stays cautious and invents no one",
+      "listed as" not in thin_body and "leadership change" in thin_body and "Our team is growing" not in thin_body,
+      thin_body.split("\n\n")[1])
+check("no email quotes the page or says 'the page says'", all(
+      '"' not in b and "page says" not in b.lower() for b in bodies.values()))
+err = outreach.validate(mutated(body=base["body"].replace("Best,", 'The page says: "Acme raises $30 million Series B"\n\nBest,')), good)
+check("a quoted-evidence line is rejected", err is not None and ("banned" in err or "quotes" in err), str(err))
 
 print(f"\n{'All tests passed' if not failures else str(len(failures)) + ' failed: ' + ', '.join(failures)}")
 sys.exit(1 if failures else 0)

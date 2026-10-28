@@ -103,7 +103,7 @@ CREATE TABLE IF NOT EXISTS runs (
 
 
 def connect(path=DB_PATH):
-    conn = sqlite3.connect(path)
+    conn = sqlite3.connect(path, timeout=30)
     conn.row_factory = sqlite3.Row
     conn.executescript(SCHEMA)
     have = {r["name"] for r in conn.execute("PRAGMA table_info(crm_sync)")}

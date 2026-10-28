@@ -1,8 +1,11 @@
 """Daily Website Observer dashboard.  Run:  streamlit run app.py"""
 import contextlib
 import html
+import importlib
 import io
 import json
+import os
+import sqlite3
 import subprocess
 import sys
 from pathlib import Path
@@ -33,12 +36,43 @@ PRIORITIES = ["High", "Medium", "Low"]
 st.set_page_config(page_title="Website Observer", page_icon=":material/radar:", layout="wide")
 
 
+OBSERVER_MODULES = ["observer.config", "observer.db", "observer.attio", "observer.airtable", "observer.seller",
+                    "observer.playbooks", "observer.analyzer", "observer.outreach", "observer.slack", "observer.crm",
+                    "observer.alerting", "observer.pipeline"]
+
+
+@st.cache_resource
+def _module_mtimes():
+    return {}
+
+
+def refresh_observer_modules():
+    """A redeploy on a host can leave a long-running process with older observer modules in memory next to a newer
+    app.py (new page, old email logic or old database schema). Reload any module whose file has changed."""
+    seen, stale = _module_mtimes(), []
+    for name in OBSERVER_MODULES:
+        module = sys.modules.get(name)
+        if module is None or not getattr(module, "__file__", None):
+            continue
+        mtime = os.path.getmtime(module.__file__)
+        if name in seen and seen[name] != mtime:
+            stale.append(name)
+        seen[name] = mtime
+    for name in stale:
+        importlib.reload(sys.modules[name])
+
+
 def query(sql, params=()):
-    conn = db.connect()
-    try:
-        return [dict(r) for r in conn.execute(sql, params).fetchall()]
-    finally:
-        conn.close()
+    for attempt in (1, 2):
+        conn = db.connect()
+        try:
+            return [dict(r) for r in conn.execute(sql, params).fetchall()]
+        except sqlite3.OperationalError:
+            if attempt == 2:
+                raise
+            importlib.reload(db)                      # an older schema or module may be cached: reload, retry once
+        finally:
+            conn.close()
 
 
 def run_script(name):
@@ -73,6 +107,7 @@ def start_site_server():
     return proc
 
 
+refresh_observer_modules()
 start_site_server()
 if query("SELECT COUNT(*) AS n FROM snapshots")[0]["n"] == 0:             # first start: take the baseline
     with st.spinner("First start: taking a baseline snapshot of the 20 demo company sites..."):

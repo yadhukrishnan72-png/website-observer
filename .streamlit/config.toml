@@ -1,6 +1,9 @@
 [server]
 headless = true
 
+[client]
+showErrorDetails = "full"                # a hosted demo should show the real error, not a redacted one
+
 # Look and feel taken from a screenshot of clay.com (Design.png): a white page, black text, black and cream buttons,
 # hairline grey rules (#e6e8ec), grey secondary text (#525a69) and blue links (#0382f7). The theme is locked to light
 # so it always matches. Clay's typeface (Roobert) is licensed and is not embedded: Figtree is the closest free font.

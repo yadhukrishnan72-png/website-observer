@@ -25,6 +25,7 @@ BANNED = [
     "touch base", "circle back", "just checking in", "curious", "game-changer", "game changer", "revolutionary",
     "cutting-edge", "cutting edge", "synergy", "supercharge", "unlock", "seamless", "best-in-class", "world-class",
     "leverage", "turnkey", "disrupt", "10x", "end-to-end", "holistic",
+    "page says", "according to the page", "according to its website",
 ]
 
 STOPWORDS = {"which", "their", "there", "about", "other", "these", "those", "would", "could", "should", "where",
@@ -174,15 +175,15 @@ def _hiring_ref(c, f):
         return f"Saw {c} is hiring across {f['area']}{role}."
     if f["role"]:
         return f"Saw {c} is hiring for {indef(f['role'])}."
-    return f'Saw a hiring update on {poss(c)} careers page: "{f["quote"]}".'
+    return f"Saw an update to {poss(c)} careers page that points to new hiring."
 
 
 def _product_ref(c, f):
     if f["name"]:
         return f"Saw {c} just introduced {f['name']}" + (f", {f['desc']}." if f["desc"] else ".")
     if f["heading"]:
-        return f'Saw {c} add "{f["heading"]}" to its products page.'
-    return f'Saw a product update on {poss(c)} site: "{f["quote"]}".'
+        return f"Saw {c} add a new item to its products page."
+    return f"Saw an update to {poss(c)} products page that points to something new."
 
 
 def _funding_ref(c, f):
@@ -199,7 +200,7 @@ def _exec_ref(c, f):
     if f["name"]:
         before = f", where {f['old']} was listed before" if f["old"] else ""
         return f"Saw {f['name']} is now listed as {f['title']} at {c}{before}."
-    return f'Saw a leadership update on {poss(c)} About page: "{f["quote"]}".'
+    return f"Saw an update to {poss(c)} About page that points to a leadership change."
 
 
 def _geo_ref(c, f):
@@ -207,7 +208,7 @@ def _geo_ref(c, f):
         return f"Saw {c} is expanding into {f['place']} with a new {f['city']} office."
     if f["place"]:
         return f"Saw {c} is expanding into {f['place']}."
-    return f'Saw {c} announce an expansion: "{f["quote"]}".'
+    return f"Saw {c} announce an expansion."
 
 
 def _pricing_ref(c, f):
@@ -224,7 +225,7 @@ def _icp_ref(c, f):
         return f"Saw {c} added a {f['segment']} page, aimed at {f['audience']}."
     if f["segment"]:
         return f"Saw {c} added a page for {f['segment']}."
-    return f'Saw a new segment page on {poss(c)} site: "{f["quote"]}".'
+    return f"Saw {c} add a page aimed at a new customer segment."
 
 
 def _partner_ref(c, f):
@@ -238,7 +239,7 @@ def _enterprise_ref(c, f):
 
 
 def _initiative_ref(c, f):
-    return f'Saw {c} announce a strategic initiative: "{f["quote"]}".'
+    return f"Saw {c} announce a new strategic initiative."
 
 
 PLAYBOOKS = {

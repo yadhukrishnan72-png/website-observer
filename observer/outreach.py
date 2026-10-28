@@ -98,6 +98,8 @@ def validate(d, ctx):
         return "draft is not signed by the account owner"
     if re.search(r"[\[\]{}<>]", subject + body):
         return "draft contains placeholder-like characters"
+    if '"' in subject + body or "\u201c" in subject + body:
+        return "draft quotes page text; reference the change in the sender's own words"
     if "!" in subject + body:
         return "draft contains an exclamation mark"
     if body.count("?") > 1:

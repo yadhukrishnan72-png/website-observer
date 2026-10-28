@@ -77,6 +77,9 @@ Newest context first within each group. Full reasoning for the original design i
 - **D33. Variety without randomness.** Two wordings each for the implication, the Clay paragraph and the offer, three opening words, and a persona lens (operators and builders versus revenue and growth leaders). A stable hash of company and trigger picks them, so the same account always gets the same email.
 - **D34. Several signals on one account produce a combined email** (funding, hiring and a new leader together), built from the other alerts in the last 30 days. Because drafts are created as each alert fires, the latest draft for an account supersedes the earlier, narrower ones; the BDR should send the newest.
 
+- **D35. No email may quote the page.** The validator rejects any quotation marks and the phrases "the page says" / "according to the page", and fallback wording (used when a fact cannot be found) says only that an update points to a hiring push or a leadership change, never quoting the evidence. The evidence stays in the internal notes.
+- **D36. The hosted app reloads changed observer modules** and retries a failed database read after reloading, because a redeploy can leave a running process with older code or an older schema next to a newer page. SQLite waits up to 30 seconds on a lock, and the hosted app shows real error messages (`client.showErrorDetails = "full"`).
+
 ## Deferred or rejected
 - Real email sending, LinkedIn automation: out of scope for the pilot.
 - Auto-discovery of decision makers: rejected for now (D7).

@@ -1,83 +1,41 @@
 # Handoff
 
-Last updated 2026-10-27. Read `CLAUDE.md` first, then this file. Design is in `plan.md`; reasons are in `DECISIONS.md`.
-
-## What this is now
-An internal tool for a GTM engineer at **Clay** (portfolio example, not real life). Clay's BDRs sell Clay to prospect companies. The tool watches each prospect's website, alerts in Slack only on meaningful changes, saves the trigger in Attio, and drafts a message to the prospect's decision maker based on what Clay sells. The 20 fictional company names stay; the decision makers are Clay's ICP personas (Head of Revenue Operations, Head of Sales Operations, Director of GTM Operations, GTM Systems Lead, GTM Engineer, Director of Growth, Chief Revenue Officer).
+**Last updated:** 2026-10-28. Read `CLAUDE.md` (rules), then this file. Reasons are in `DECISIONS.md`, the original design in `plan.md`, the live-demo script in `DEMO.md`, the day-by-day log in `sessions/`.
 
 ## Where we are
-| Phase | Status |
-|---|---|
-| 1-6 Sites, fetch/clean, diff + noise rules, analyzer, Slack, Streamlit dashboard | Done |
-| 8 Attio client + lists | Done: `observer/attio.py`; lists `gtm_triggers` (on Companies) and `outreach_messages` (on People); 20 companies + 20 placeholder contacts seeded |
-| 9 Contacts + drafting | Done: `observer/outreach.py` |
-| 10 Wire it together | Done 2026-10-27: `observer/crm.py`, `observer/seller.py`, Attio section in the Slack alert, `crm_sync` table, retry of failed Attio saves, careers page + Scenario C, dashboard (Outreach drafts view, Attio details, Drafts KPI, reset clears Attio demo entries) |
-| Airtable push | Done 2026-10-27: `observer/airtable.py` creates the table `Observer Triggers` (21 fields) in the user's "Website Observer" base and upserts one row per alert keyed on Change ID; Slack alert, dashboard, reset and rehearsals cover it. Live-verified: `python demo_scripts/rehearse.py --times 3` passed all 18 checks (scenarios A-F). Two earlier runs each had one intermittent failure (Attio list-query lag; an Airtable row with empty Status, root cause not reproduced); both were hardened (settle-waits, 404-tolerant reset, Status set whenever empty, one retry on Airtable 5xx). If it recurs, the failure message now includes the recorded Airtable error. |
-| Scenario expansion | Done 2026-10-27: 14 scenarios, each on a different company (`demo_scripts/scenarios.py` registry; originals Acme noise/product/hiring kept): funding, executive change, geographic expansion, pricing change, new ICP, strategic partnership, enterprise GTM push, combined growth signals, plus 3 ignored changes (Mintwise, Stackbank, PayHarbor). Dashboard: scenario picker, "Apply all", new Demo scenarios view, Combined growth signals panel. Slack alert gains an "Also on this account" line. Tests: `demo_scripts/test_scenarios.py` (bundle: 12 alerts across 9 companies, 3 ignored, Attio/Airtable match, duplicate blocked; also `--isolated`), `evaluate.py` now 24 cases. Live script: `DEMO.md`. |
-| 7 Test set, evaluation, reset, rehearsals | Done 2026-10-27: `evaluate.py` + `evaluation/fixtures.py` (10 noise / 8 signal cases, 5 metrics, all pass on the mock), `demo_scripts/reset_demo.py`, `demo_scripts/rehearse.py` (scenarios A-D incl. Attio down/retry; 3 consecutive rehearsals passed against the real Attio workspace). |
+A finished, deployed portfolio demo. An internal tool framed as built by a GTM engineer at **Clay** (example seller). It watches 20 fictional company sites (5 pages each), filters noise, classifies buying signals, alerts in Slack, saves a trigger and a draft email in Attio, and saves one flat row per alert in an Airtable table (`Observer Triggers`). Nothing is ever sent to a prospect; Airtable is the end of the pipeline and Instantly is not connected. Runs on demand, no scheduler.
 
-## Flow
-fetch -> clean -> diff -> noise rules -> analyzer (Claude or mock) -> dedupe -> **crm.sync_change** (company upsert, trigger entry, find decision maker, draft) -> Slack alert with Attio links and the draft. If Attio fails the alert still goes out, marked `crm_failed` and retried next run (`crm.retry_failed`). If a company has no contact, the trigger is saved and the alert says "no decision maker on file".
+- **Code:** private GitHub repo `yadhukrishnan72-png/website-observer`, branch `main`, last pushed commit `51e4042` (this handoff is committed after it).
+- **Hosted app:** https://website-observer-6nxxvf5rptxaqueul9kyxa.streamlit.app/ on Streamlit Community Cloud, running with the **real** Slack/Attio/Airtable keys by the user's choice (so anyone with the link can trigger posts and Reset).
+- **Analysis and drafts** use the rule-based stand-in (`mock-heuristic`), not an AI. No `ANTHROPIC_API_KEY` yet; the Claude paths are written but have never run against the live API.
+- **Local state:** demo sites and `observer.db` at a clean baseline (100 pages, 0 changes); Attio demo lists and Airtable table empty as of the last test run.
 
-## State of the repo (at last update)
-- Sites include a careers page: 20 companies x 5 pages = 100 monitored pages.
-- Clean baseline after the last rehearsal: 100 pages, 0 changes, no demo entries in Attio, sites unmodified. Reset any time with `python demo_scripts/reset_demo.py` or the dashboard button (both also clear the Attio demo entries, never companies or people).
-- `.env` has `SLACK_WEBHOOK_URL` and `ATTIO_API_KEY` set. `ANTHROPIC_API_KEY` is empty, so analysis and drafts use the labelled mock (`mock-heuristic`).
-- the user's Attio workspace. 10 sample companies already existed there; leave them alone.
+## What we did (whole session, 2026-10-26 to 28)
+Built Phases 1-6 (sites, fetch/clean/diff, noise rules, analyzer, Slack, dashboard); added Attio (lists, 20 companies + placeholder contacts) and Airtable; Clay framing and personas; 14 scenarios, one company each; evaluation, reset, rehearsals; safe demo mode and Streamlit Cloud deployment; restyled the dashboard to match the user's `Design.png` of clay.com (locked light theme, `assets/clay.css`); rewrote email generation around per-trigger playbooks with a strict validator; banned quoted page text in emails; made the hosted app reload changed modules after a redeploy. Today's details: `sessions/2026-10-28.md`.
 
-## How to run the demo
-1. `python -m http.server 8000 --directory demo_sites`
-2. `streamlit run app.py` (header should read "Alerts: Slack webhook", "CRM: Attio")
-3. Scenario A (noise): 0 alerts. B (Acme Agents product): 1 alert, New Product Category. C (revenue operations and GTM engineering hiring push on the careers page): 1 alert, Hiring / Growth Signal.
-4. Show: the short Slack alert (links to Attio and the Airtable row; the email draft is not repeated in Slack), then Attio (company, trigger list entry, Outreach Messages draft), then the dashboard Outreach drafts view.
-5. Reset (see above). Dedupe blocks a repeat alert for 30 days otherwise.
+## What's next (in order)
+1. **User, on the hosted app, after the last push:** Manage app > Reboot app, reload, then left rail > Reset demo > tick the box > Reset demo to baseline (clears the old Northwind test draft from the hosted DB, Attio and Airtable). Then Apply *Northwind Analytics: Funding announcement*, Run observer now, and check the Airtable email body has no "The page says" line.
+2. If the hosted page still shows a red error, get the error text (now readable via `showErrorDetails = "full"`) and fix the real cause. The earlier `sqlite3.OperationalError` cause is unconfirmed.
+3. Optional: get an Anthropic API key into the local `.env` (never into the hosted app unless the user decides), then run `python evaluate.py`, `python -m evaluation.test_playbooks` and `python demo_scripts/sample_emails.py` on the Claude path; the current 100% scores measure the rules.
+4. Optional polish: mark older drafts as superseded when a combined draft is created for the same account; re-check the Clay wording in `observer/seller.py` and `observer/playbooks.py` against clay.com before presenting; Roobert only if the user has a license.
 
-## Hosting (Streamlit Cloud, safe demo mode)
-- Vercel cannot run Streamlit (needs a long-running server and writable disk), so the live dashboard targets Streamlit Community Cloud. A Vercel static page would only be a showcase.
-- Safe demo mode = no `.env` / secrets on the host. The app serves the 20 dummy sites itself (`start_site_server` in `app.py`), takes a baseline on first start, uses the rule-based analyzer, prints alerts in the run log, and takes the decision maker from `contacts.csv` with the draft kept in the local database (`crm._sync_local`, status `local`). Verified from a fresh clone: 12 alerts, 12 drafts, reset works.
-- Never put Slack, Attio, Airtable or Anthropic secrets in the hosted app: any visitor could trigger posts and resets. The hosted demo is shared by all visitors (one site folder, one database); Reset demo to baseline fixes it.
-- The repo excludes `.env`, `observer.db`, `demo_sites/` (regenerated) and the unrelated `gtm-systems-thinking-agent/` and `__MACOSX/` folders.
+## Blockers and open questions for the user
+- Whether to keep real keys on the public hosted app (accepted so far) or clear the Secrets / restrict viewers.
+- Whether to add a scheduler (user chose on demand for now).
+- Anthropic key: wanted or not.
 
-## Email generation
-- `observer/playbooks.py` (per-trigger playbooks and fact extraction), `observer/outreach.py` (drafting and validation). Review the output with `python demo_scripts/sample_emails.py` (add `--scenarios acme-hiring` for a single-signal email); test with `python -m evaluation.test_playbooks` (46 checks, including every wording combination staying within 70-110 words). See DECISIONS D30-D34.
-- The Claude drafting path (rewritten prompt plus playbook guidance) has never run against the live API; the stand-in writes the emails today and is labelled `mock-heuristic`.
-- Not yet done: nothing marks an older draft as superseded when a later combined draft is created for the same account.
+## Leftover cleanup
+- `Design.png` (user's Clay screenshot) sits in the project folder, gitignored on purpose; `gtm-systems-thinking-agent/` and `__MACOSX/` are unrelated cohort material, also gitignored. Leave them.
+- Scratch files (screenshot helpers, splice scripts) live in the session scratchpad outside the repo.
+- Nothing is left running; local port 8000 and the preview server were stopped.
 
-## Look and feel
-- The dashboard follows a screenshot of clay.com the user supplied (`Design.png`, kept out of the repo): floating nav bar with a black "Run observer now" button, left rail with letter-spaced labels, hairline stat cells and a two-column card grid with outlined tags. Locked light theme in `.streamlit/config.toml` (Figtree font; Clay's Roobert is licensed) plus `assets/clay.css`, which targets only keyed containers and its own classes. `streamlit==1.66.1` is pinned so the CSS cannot break on an upgrade. See DECISIONS D27-D29.
-- Tab names in the top bar are shortened (Scenarios, Drafts, Snapshots); the underlying view names are unchanged.
+## Gotchas
+- Use `python`, not `python3`. Blank `SLACK_WEBHOOK_URL=` in the environment to test without posting to Slack.
+- Streamlit is pinned to 1.66.1 because `assets/clay.css` depends on its structure. Hosted redeploys can leave old code in memory; the app now reloads changed modules, but Reboot app is still the reliable fix.
+- Attio/Airtable reads lag writes by a second or two; Attio creates are not auto-retried (duplicate risk).
+- Shell heredocs lose backslash escapes in long inline Python: write the script to a file with the editor tool.
+- Claude Code may kill long background runs for low memory; do not restart them unasked.
+- `git push` works when the user asks; `gh repo create` was blocked by the permission check.
 
-## Next steps
-1. **User:** get an Anthropic API key into `.env` (`ANTHROPIC_API_KEY=...`), then run `python evaluate.py` and `python demo_scripts/rehearse.py` again. Claude analysis and Claude drafting have never been tested against the real API; the current 100% scores measure the keyword stand-in against cases written alongside it.
-2. Walk through the dashboard in a real browser (only headless-tested so far).
-3. Optional: README and demo script wording for the Clay framing ("example seller modelled on a GTM data platform; edit `seller.py` and `contacts.csv` to retarget").
-
-## Known gaps and risks
-- Claude paths untested (no key). The mock is keyword/template based and is not AI.
-- Placeholder contacts and the `<slug>.example.com` company domains are demo data that exist only in Attio.
-- Clay pitch lines in `seller.py` paraphrase clay.com's own wording; no results or numbers are claimed. Re-check them against the site before presenting.
-- Draft status moves (Approved, Sent) are manual in Attio; nothing is sent by this tool.
-- Dashboard tested headlessly (AppTest) only.
-
-## Attio facts verified against the live API
-- Companies match on `domains`, people on `email_addresses`; records return `web_url`. Attio rejects the bare `.example` TLD; matching uses the full subdomain, so `<slug>.example.com` keeps companies separate. Upserts are idempotent.
-- Lists support text, select and timestamp attributes; `created_at` already exists on every list. Entries take plain strings for text and select values.
-- People filter by company works in `POST /objects/people/records/query` with `{"company": {"target_object": "companies", "target_record_id": ...}}`.
-
-## Airtable notes
-- `.env`: `AIRTABLE_BASE_ID` is the bare `app...` id and `AIRTABLE_TABLE=Observer Triggers`. The base also holds Airtable's website-monitor template tables (Trigger Outreach, Checks, Incidents); they are untouched and safe to delete.
-- Attio and Airtable list reads can lag behind writes and deletes: wait/poll before judging counts, and treat a 404 on delete as already deleted.
-- `.env` `AIRTABLE_BASE_ID` may hold a pasted Airtable URL; `airtable.ids()` extracts the `app...` base id and `tbl...` table id.
-- Row key is `Change ID` (upsert). `Status` is set to Draft only when a row is created, so a retry never overwrites an Approved status. Fields are created by `airtable.ensure_schema()`; the primary field is renamed `Trigger`.
-- The Airtable token was printed once into the session transcript by mistake; regenerate it at airtable.com/create/tokens and update `.env`.
-
-## Gotchas learned
-- `python3` is a Windows Store alias that fails; use `python`.
-- Importing `observer.slack` alone does not load `.env`; import `observer.config` first (importing `attio` or `pipeline` does).
-- To test without posting to Slack, set `SLACK_WEBHOOK_URL=` (empty) in the process environment; the loader will not override it.
-- Windows console is cp1252: set `PYTHONIOENCODING=utf-8` for scripts that print emoji.
-- Deleting `observer.db` fails if a connection is still open.
-- Background `pip install` can re-apply later and duplicate edits; install in the foreground.
-- The streamlit skill's `discover.py` fails under the `python3` alias; read its SKILL.md and references directly.
-- The auto-mode command checker fails intermittently; retrying the identical command works.
-- Re-running `generate_demo_sites.py` is the site reset; it is deterministic.
+## How to run and test
+`python demo_scripts/reset_demo.py` then `streamlit run app.py` (see `DEMO.md`). Tests: `python evaluate.py`, `python -m evaluation.test_playbooks`, `python demo_scripts/test_scenarios.py`, `python demo_scripts/rehearse.py`, `python demo_scripts/sample_emails.py`.

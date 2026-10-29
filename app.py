@@ -12,7 +12,7 @@ from pathlib import Path
 
 import streamlit as st
 
-from observer import airtable, attio, config, db, pipeline, slack
+from observer import airtable, attio, config, db, importer, pipeline, slack
 
 ROOT = Path(__file__).resolve().parent
 SCRIPTS = ROOT / "demo_scripts"
@@ -443,6 +443,41 @@ elif view == "Accounts":
                 st.error(error)
             else:
                 st.success(f"Added {company.strip()} with {len(pages)} pages. Run the observer to take its baseline snapshot.")
+
+    with st.container(border=True):
+        st.subheader("Import accounts from CSV")
+        st.caption("Columns: company, website, industry, owner, priority, plus optional products_url, pricing_url, "
+                   "careers_url, news_url, about_url. Without page columns, the usual paths under the website are probed.")
+        st.download_button("Download template", importer.TEMPLATE, "accounts_template.csv", "text/csv")
+        upload = st.file_uploader("Target account CSV", type="csv")
+        if upload is None:
+            st.session_state.pop("import_preview", None)
+        elif st.session_state.get("import_preview", {}).get("key") != (upload.name, upload.size):
+            rows, error = importer.parse(upload.getvalue().decode("utf-8-sig", errors="replace"))
+            if error:
+                st.error(error)
+            else:
+                conn = db.connect()
+                with st.spinner(f"Checking {len(rows)} accounts and their pages..."):
+                    results = importer.preview(rows, conn)
+                conn.close()
+                st.session_state["import_preview"] = {"key": (upload.name, upload.size), "results": results}
+        pv = st.session_state.get("import_preview")
+        if upload is not None and pv:
+            results = pv["results"]
+            ready = [r for r in results if r["Status"] == "ready"]
+            st.dataframe([{k: v for k, v in r.items() if k != "pages"} for r in results], hide_index=True,
+                         alt="Import preview with a status for each row")
+            st.caption(f"{len(ready)} ready, {sum(r['Status'] == 'skip' for r in results)} skipped, "
+                       f"{sum(r['Status'] == 'error' for r in results)} with errors. Nothing is saved until you confirm.")
+            if ready and st.button(f"Import {len(ready)} accounts", type="primary"):
+                conn = db.connect()
+                added, failures = importer.commit(results, conn)
+                conn.close()
+                st.session_state.pop("import_preview", None)
+                st.success(f"Added {added} accounts. Run the observer to take their baseline snapshots.")
+                for company, message in failures:
+                    st.error(f"{company}: {message}")
 
 # ----------------------------------------------------------------------------- pages and snapshots
 

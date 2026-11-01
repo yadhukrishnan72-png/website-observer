@@ -12,7 +12,7 @@ Portfolio pilot, framed as an internal tool built by a GTM engineer at Clay (exa
 - The 14 scenarios live in `demo_scripts/scenarios.py`; add new ones there. Live demo script: `DEMO.md`.
 
 ## Architecture
-`fetcher` -> `cleaner` -> `differ` -> `noise_rules` -> `analyzer` (Claude or mock) -> `alerting` (dedupe, then `crm` -> `attio` / `airtable` + `outreach`, then Slack). `playbooks.py` holds the per-trigger email wording, `seller.py` the Clay pitch, `db.py` SQLite, `app.py` the Streamlit dashboard.
+`fetcher` -> `cleaner` -> `differ` -> `noise_rules` -> `analyzer` (Claude or mock) -> `alerting` (dedupe, then `crm` -> `attio` / `airtable` + `outreach`, then Slack). `playbooks.py` holds the per-trigger email wording, `seller.py` the Clay pitch, `importer.py` CSV bulk import (preview, then commit), `db.py` SQLite, `app.py` the Streamlit dashboard.
 
 ## Conventions
 - Match existing style: small modules, short docstrings, comments only for the non-obvious why.
@@ -22,6 +22,7 @@ Portfolio pilot, framed as an internal tool built by a GTM engineer at Clay (exa
 - LLM and drafter output is never trusted: validate it. Emails state only facts from the detected change and never quote the page.
 - An alert is never lost: Slack/CRM/Airtable failures are recorded and retried next run. Drafts are always status Draft; nothing is ever sent to a prospect.
 - Seller claims come only from `seller.py`/`playbooks.py`: no results, prices or numbers about Clay.
+- Hosted app = Streamlit Cloud, deploys from GitHub `main`: a feature is not visible there until committed and pushed (ask first). Check for a local `streamlit` process before assuming which copy the user sees.
 - Look = `.streamlit/config.toml` (locked light theme) + `assets/clay.css`, which targets only keyed containers and our own classes. Streamlit is pinned to 1.66.1 so the CSS cannot break.
 - Attio and Airtable list reads lag writes by a second or two: poll before asserting counts. Creates are not auto-retried after a network error (duplicate risk).
 - Windows console is cp1252: set `PYTHONIOENCODING=utf-8` for scripts that print emoji.

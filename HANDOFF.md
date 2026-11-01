@@ -1,19 +1,23 @@
 # Handoff
 
-**Last updated:** 2026-10-28. Read `CLAUDE.md` (rules), then this file. Reasons are in `DECISIONS.md`, the original design in `plan.md`, the live-demo script in `DEMO.md`, the day-by-day log in `sessions/`.
+**Last updated:** 2026-11-01. Read `CLAUDE.md` (rules), then this file. Reasons are in `DECISIONS.md`, the original design in `plan.md`, the live-demo script in `DEMO.md`, the day-by-day log in `sessions/`.
 
 ## Where we are
 A finished, deployed portfolio demo. An internal tool framed as built by a GTM engineer at **Clay** (example seller). It watches 20 fictional company sites (5 pages each), filters noise, classifies buying signals, alerts in Slack, saves a trigger and a draft email in Attio, and saves one flat row per alert in an Airtable table (`Observer Triggers`). Nothing is ever sent to a prospect; Airtable is the end of the pipeline and Instantly is not connected. Runs on demand, no scheduler.
 
-- **Code:** private GitHub repo `yadhukrishnan72-png/website-observer`, branch `main`, last pushed commit `51e4042` (this handoff is committed after it).
+- **Code:** private GitHub repo `yadhukrishnan72-png/website-observer`, branch `main`, last feature commit `732330f` (CSV import); the handoff commit follows it.
 - **Hosted app:** https://website-observer-6nxxvf5rptxaqueul9kyxa.streamlit.app/ on Streamlit Community Cloud, running with the **real** Slack/Attio/Airtable keys by the user's choice (so anyone with the link can trigger posts and Reset).
 - **Analysis and drafts** use the rule-based stand-in (`mock-heuristic`), not an AI. No `ANTHROPIC_API_KEY` yet; the Claude paths are written but have never run against the live API.
 - **Local state:** demo sites and `observer.db` at a clean baseline (100 pages, 0 changes); Attio demo lists and Airtable table empty as of the last test run.
 
-## What we did (whole session, 2026-10-26 to 28)
+## What we did (2026-11-01, latest)
+Added CSV bulk import of accounts (`observer/importer.py`, Accounts page): template download, preview with per-row status, confirm to import, page auto-discovery by probing common paths. Tested on an in-memory DB only. Details: `sessions/2026-11-01.md`, D in `DECISIONS.md`.
+
+## What we did (2026-10-26 to 28)
 Built Phases 1-6 (sites, fetch/clean/diff, noise rules, analyzer, Slack, dashboard); added Attio (lists, 20 companies + placeholder contacts) and Airtable; Clay framing and personas; 14 scenarios, one company each; evaluation, reset, rehearsals; safe demo mode and Streamlit Cloud deployment; restyled the dashboard to match the user's `Design.png` of clay.com (locked light theme, `assets/clay.css`); rewrote email generation around per-trigger playbooks with a strict validator; banned quoted page text in emails; made the hosted app reload changed modules after a redeploy. Today's details: `sessions/2026-10-28.md`.
 
 ## What's next (in order)
+0. **User:** after the hosted app redeploys `732330f`, try the CSV import on the Accounts page (upload a small CSV, check the preview, import, then Run observer to baseline). Auto-discovery is untested on a live site; test it with the demo site server running (`reset_demo.py` starts it) or a real site. If the section is missing, Reboot app.
 1. **User, on the hosted app, after the last push:** Manage app > Reboot app, reload, then left rail > Reset demo > tick the box > Reset demo to baseline (clears the old Northwind test draft from the hosted DB, Attio and Airtable). Then Apply *Northwind Analytics: Funding announcement*, Run observer now, and check the Airtable email body has no "The page says" line.
 2. If the hosted page still shows a red error, get the error text (now readable via `showErrorDetails = "full"`) and fix the real cause. The earlier `sqlite3.OperationalError` cause is unconfirmed.
 3. Optional: get an Anthropic API key into the local `.env` (never into the hosted app unless the user decides), then run `python evaluate.py`, `python -m evaluation.test_playbooks` and `python demo_scripts/sample_emails.py` on the Claude path; the current 100% scores measure the rules.
